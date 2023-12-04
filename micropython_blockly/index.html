@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  
+  <meta name="google" value="notranslate">
+  <title></title>
+  <link rel="stylesheet" href="style.css">
+  <script src="/storage.js"></script>
+  <script src="js/blockly_compressed.js"></script>
+  <script src="js/blocks_compressed.js"></script>
+  <script src="js/python_compressed.js"></script>
+  <script src="js/code.js"></script>
+  <script src="js/term.js"></script>
+  <script src="js/FileSaver.js"></script>
+  <script src="js/blockly_save.js"></script>
+  
+</head>
+<body>
+  <div id="blocklyDiv"></div>
+  <table width="100%" height="80%">
+    <tr>
+      <td>
+        <h1>
+          <span id="title">Micropython</span>
+        </h1>
+		<form>
+			<input type="text" name="webrepl_url" id="url" value="ws://192.168.1.111:8266/" />
+			<input type="password" name="webrepl_pw" id="web_pw" value="123456" />
+			<input type="submit" id="button" value="Connect" onclick="button_click(); return false;" />
+		</form>
+      </td>
+      <td class="farSide">
+        <select id="languageMenu"></select>
+		<br></br>
+		<span style="background-color:transparent;"class='file-box'id="put-file-list"></span>
+		<div id="file-status"><span style="color:#707070;float:right;">(file operation status)</span></div>
+      </td>
+    </tr>
+	
+    <tr>
+      <td colspan=2>
+        <table width="100%">
+          <tr id="tabRow" height="1em">
+            <td id="tab_blocks" class="tabon">...</td>
+            <td class="tabmin">&nbsp;</td>
+            <!--<td id="tab_javascript" class="taboff">JavaScript</td>
+            <td class="tabmin">&nbsp;</td>-->
+            <td id="tab_python" class="taboff">Python</td>
+            <!--<td class="tabmin">&nbsp;</td>
+            <td id="tab_lua" class="taboff">Lua</td>-->
+            <td class="tabmin">&nbsp;</td>
+            <td id="tab_xml" class="taboff">XML</td>
+            <td class="tabmax">
+			  <button onclick="send_py();setTimeout(put_file, 1000);">direct send</button>
+              <button id="trashButton" class="notext" title="...">
+                <img src='media/1x1.gif' class="trash icon21">
+              </button>
+              <button id="linkButton" class="notext" title="...">
+                <img src='media/1x1.gif' class="link icon21">
+              </button>
+			  <!--<button id="put-file-button" onclick="put_file(); return false;" class="notext primary" title="Run the program defined by the blocks in the workspace."></button>-->
+			  <button id="put-file-button" class="notext primary" title="Send to device" onclick="put_file(); return false;"style="font-size : 20px;">
+                <!--<img src='../../media/1x1.gif' class="run icon21">-->Send
+              </button>
+			  
+			  <button id="test" class="notext primary" title="get code" onclick="saveCodePy();"style="font-size : 20px;">
+                <!--<img src='../../media/1x1.gif' class="run icon21">-->Get
+              </button>
+    
+			  <button id="put-file-select77" class="notext primary" title="Select a file"onclick="document.getElementById('put-file-select').click();" >
+                <img src='media/upload.png' >
+              </button>
+			  <button title="Save as XML" onclick="save()">Save XML</button>
+			  <button title="get_files" onclick="get_file_namme()">Get file</button>
+			  <button onclick="term.emit('data','\3');ws.send('import os\r\n');ws.send('os.listdir()\r\n');">Test</button>
+			  <button onclick="term.emit('data','\3');ws.send('import machine\r\n');ws.send('machine.reset()\r\n');restart1()">Restart</button>
+			  <button id="runButton" class="notext primary" title="..."hidden="hidden">
+                <img src='media/1x1.gif' >
+              </button>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td height="99%" colspan=2 id="content_area">
+      </td>
+    </tr>
+  </table>
+  <div id="content_blocks" class="content"style="position: absolute"></div>
+  <!--<pre id="content_javascript" class="content"></pre>-->
+  <pre id="content_python" class="content"></pre>
+  <!--<pre id="content_php" class="content"></pre>
+  <pre id="content_lua" class="content"></pre>
+  <pre id="content_dart" class="content"></pre>-->
+  <textarea id="content_xml" class="content" wrap="off"></textarea>
+  
+  <!-- WEBREPL AREA-->
+<div style="background-color: rgb(0, 0, 0);position: static;">
+<div style="display:inline-block; vertical-align:top;">
+<div id="term" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" >
+</div>
+</div>
+<div id="file-boxes" style="display:inline-block; vertical-align:Bottom;position: static; width:230px;">
+
+  <div class="file-box"hidden="hidden">
+    <input type="file" id="put-file-select"hidden="hidden";>
+  </div>
+
+  <div class="file-box"hidden="hidden">
+    <input type="text" name="get_filename" id="get_filename" value="" size="13">
+    <input type="button" value="Get from device" onclick="get_file(); return false;">
+  </div>
+
+  
+
+</div>
+</div>
+<!-- WEBREPL AREA END-->
+  
+
+  <xml xmlns="http://www.w3.org/1999/xhtml" id="toolbox" style="display: none;">
+  <category name="PIN" colour="#a5935b">
+    <block type="pin_out">
+      <field name="Pin">1</field>
+      <field name="type">out</field>
+    </block>
+    <block type="onoffpin">
+      <field name="PIN">0</field>
+      <field name="OnOff">on</field>
+    </block>
+    <block type="high_low">
+      <field name="High_Low">high</field>
+    </block>
+    <block type="input_pin">
+      <field name="PIN">0</field>
+    </block>
+    <block type="analog_input"></block>
+    <block type="pwm_setup">
+      <field name="pin">0</field>
+    </block>
+  </category>
+  <category name="TIME" colour="#93a55b">
+    <block type="delay_ms">
+      <field name="ms">1000</field>
+    </block>
+  </category>
+  <category name="UART" colour="#a55ba5">
+    <block type="uart_sender"></block>
+    <block type="uart_setup">
+      <field name="baud">9600</field>
+    </block>
+  </category>
+  <sep></sep>
+  <category name="Logic" colour="#5C81A6">
+    <block type="controls_if"></block>
+    <block type="logic_compare">
+      <field name="OP">EQ</field>
+    </block>
+    <block type="logic_operation">
+      <field name="OP">AND</field>
+    </block>
+    <block type="logic_negate"></block>
+    <block type="logic_boolean">
+      <field name="BOOL">TRUE</field>
+    </block>
+    <block type="logic_null"></block>
+    <block type="logic_ternary"></block>
+  </category>
+  <category name="Loops" colour="#5CA65C">
+    <block type="controls_repeat_ext">
+      <value name="TIMES">
+        <shadow type="math_number">
+          <field name="NUM">10</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="controls_whileUntil">
+      <field name="MODE">WHILE</field>
+    </block>
+    <block type="controls_for">
+      <field name="VAR" id="u//(sk:n+b|OIa!o3_V|" variabletype="">i</field>
+      <value name="FROM">
+        <shadow type="math_number">
+          <field name="NUM">1</field>
+        </shadow>
+      </value>
+      <value name="TO">
+        <shadow type="math_number">
+          <field name="NUM">10</field>
+        </shadow>
+      </value>
+      <value name="BY">
+        <shadow type="math_number">
+          <field name="NUM">1</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="controls_forEach">
+      <field name="VAR" id="o`PIR1]Nj(0p6IdT*b!c" variabletype="">j</field>
+    </block>
+    <block type="controls_flow_statements">
+      <field name="FLOW">BREAK</field>
+    </block>
+  </category>
+  <category name="Math" colour="#5C68A6">
+    <block type="math_round">
+      <field name="OP">ROUND</field>
+      <value name="NUM">
+        <shadow type="math_number">
+          <field name="NUM">3.1</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="math_number">
+      <field name="NUM">0</field>
+    </block>
+    <block type="math_single">
+      <field name="OP">ROOT</field>
+      <value name="NUM">
+        <shadow type="math_number">
+          <field name="NUM">9</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="math_trig">
+      <field name="OP">SIN</field>
+      <value name="NUM">
+        <shadow type="math_number">
+          <field name="NUM">45</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="math_constant">
+      <field name="CONSTANT">PI</field>
+    </block>
+    <block type="math_number_property">
+      <mutation divisor_input="false"></mutation>
+      <field name="PROPERTY">EVEN</field>
+      <value name="NUMBER_TO_CHECK">
+        <shadow type="math_number">
+          <field name="NUM">0</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="math_arithmetic">
+      <field name="OP">ADD</field>
+      <value name="A">
+        <shadow type="math_number">
+          <field name="NUM">1</field>
+        </shadow>
+      </value>
+      <value name="B">
+        <shadow type="math_number">
+          <field name="NUM">1</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="math_on_list">
+      <mutation op="SUM"></mutation>
+      <field name="OP">SUM</field>
+    </block>
+    <block type="math_modulo">
+      <value name="DIVIDEND">
+        <shadow type="math_number">
+          <field name="NUM">64</field>
+        </shadow>
+      </value>
+      <value name="DIVISOR">
+        <shadow type="math_number">
+          <field name="NUM">10</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="math_constrain">
+      <value name="VALUE">
+        <shadow type="math_number">
+          <field name="NUM">50</field>
+        </shadow>
+      </value>
+      <value name="LOW">
+        <shadow type="math_number">
+          <field name="NUM">1</field>
+        </shadow>
+      </value>
+      <value name="HIGH">
+        <shadow type="math_number">
+          <field name="NUM">100</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="math_random_int">
+      <value name="FROM">
+        <shadow type="math_number">
+          <field name="NUM">1</field>
+        </shadow>
+      </value>
+      <value name="TO">
+        <shadow type="math_number">
+          <field name="NUM">100</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="math_random_float"></block>
+  </category>
+  <category name="Text" colour="#5CA68D">
+    <block type="text_charAt">
+      <mutation at="true"></mutation>
+      <field name="WHERE">FROM_START</field>
+      <value name="VALUE">
+        <block type="variables_get">
+          <field name="VAR" id="?.}!@wwpW8eSmEPtsq*K" variabletype="">text</field>
+        </block>
+      </value>
+    </block>
+    <block type="text">
+      <field name="TEXT"></field>
+    </block>
+    <block type="text_append">
+      <field name="VAR" id="?vI;?qco50%l0BXFr7c3" variabletype="">item</field>
+      <value name="TEXT">
+        <shadow type="text">
+          <field name="TEXT"></field>
+        </shadow>
+      </value>
+    </block>
+    <block type="text_length">
+      <value name="VALUE">
+        <shadow type="text">
+          <field name="TEXT">abc</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="text_isEmpty">
+      <value name="VALUE">
+        <shadow type="text">
+          <field name="TEXT"></field>
+        </shadow>
+      </value>
+    </block>
+    <block type="text_indexOf">
+      <field name="END">FIRST</field>
+      <value name="VALUE">
+        <block type="variables_get">
+          <field name="VAR" id="?.}!@wwpW8eSmEPtsq*K" variabletype="">text</field>
+        </block>
+      </value>
+      <value name="FIND">
+        <shadow type="text">
+          <field name="TEXT">abc</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="text_join">
+      <mutation items="2"></mutation>
+    </block>
+    <block type="text_getSubstring">
+      <mutation at1="true" at2="true"></mutation>
+      <field name="WHERE1">FROM_START</field>
+      <field name="WHERE2">FROM_START</field>
+      <value name="STRING">
+        <block type="variables_get">
+          <field name="VAR" id="?.}!@wwpW8eSmEPtsq*K" variabletype="">text</field>
+        </block>
+      </value>
+    </block>
+    <block type="text_changeCase">
+      <field name="CASE">UPPERCASE</field>
+      <value name="TEXT">
+        <shadow type="text">
+          <field name="TEXT">abc</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="text_trim">
+      <field name="MODE">BOTH</field>
+      <value name="TEXT">
+        <shadow type="text">
+          <field name="TEXT">abc</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="text_print">
+      <value name="TEXT">
+        <shadow type="text">
+          <field name="TEXT">abc</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="text_prompt_ext">
+      <mutation type="TEXT"></mutation>
+      <field name="TYPE">TEXT</field>
+      <value name="TEXT">
+        <shadow type="text">
+          <field name="TEXT">abc</field>
+        </shadow>
+      </value>
+    </block>
+  </category>
+  <category name="Lists" colour="#745CA6">
+    <block type="lists_indexOf">
+      <field name="END">FIRST</field>
+      <value name="VALUE">
+        <block type="variables_get">
+          <field name="VAR" id="sX|Fqxh~;|`R#*8)~Qf#" variabletype="">list</field>
+        </block>
+      </value>
+    </block>
+    <block type="lists_create_with">
+      <mutation items="0"></mutation>
+    </block>
+    <block type="lists_repeat">
+      <value name="NUM">
+        <shadow type="math_number">
+          <field name="NUM">5</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="lists_length"></block>
+    <block type="lists_isEmpty"></block>
+    <block type="lists_create_with">
+      <mutation items="3"></mutation>
+    </block>
+    <block type="lists_getIndex">
+      <mutation statement="false" at="true"></mutation>
+      <field name="MODE">GET</field>
+      <field name="WHERE">FROM_START</field>
+      <value name="VALUE">
+        <block type="variables_get">
+          <field name="VAR" id="sX|Fqxh~;|`R#*8)~Qf#" variabletype="">list</field>
+        </block>
+      </value>
+    </block>
+    <block type="lists_setIndex">
+      <mutation at="true"></mutation>
+      <field name="MODE">SET</field>
+      <field name="WHERE">FROM_START</field>
+      <value name="LIST">
+        <block type="variables_get">
+          <field name="VAR" id="sX|Fqxh~;|`R#*8)~Qf#" variabletype="">list</field>
+        </block>
+      </value>
+    </block>
+    <block type="lists_getSublist">
+      <mutation at1="true" at2="true"></mutation>
+      <field name="WHERE1">FROM_START</field>
+      <field name="WHERE2">FROM_START</field>
+      <value name="LIST">
+        <block type="variables_get">
+          <field name="VAR" id="sX|Fqxh~;|`R#*8)~Qf#" variabletype="">list</field>
+        </block>
+      </value>
+    </block>
+    <block type="lists_split">
+      <mutation mode="SPLIT"></mutation>
+      <field name="MODE">SPLIT</field>
+      <value name="DELIM">
+        <shadow type="text">
+          <field name="TEXT">,</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="lists_sort">
+      <field name="TYPE">NUMERIC</field>
+      <field name="DIRECTION">1</field>
+    </block>
+  </category>
+  <category name="Colour" colour="#A6745C">
+    <block type="colour_picker">
+      <field name="COLOUR">#ff0000</field>
+    </block>
+    <block type="colour_random"></block>
+    <block type="colour_rgb">
+      <value name="RED">
+        <shadow type="math_number">
+          <field name="NUM">100</field>
+        </shadow>
+      </value>
+      <value name="GREEN">
+        <shadow type="math_number">
+          <field name="NUM">50</field>
+        </shadow>
+      </value>
+      <value name="BLUE">
+        <shadow type="math_number">
+          <field name="NUM">0</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="colour_blend">
+      <value name="COLOUR1">
+        <shadow type="colour_picker">
+          <field name="COLOUR">#ff0000</field>
+        </shadow>
+      </value>
+      <value name="COLOUR2">
+        <shadow type="colour_picker">
+          <field name="COLOUR">#3333ff</field>
+        </shadow>
+      </value>
+      <value name="RATIO">
+        <shadow type="math_number">
+          <field name="NUM">0.5</field>
+        </shadow>
+      </value>
+    </block>
+  </category>
+  <sep></sep>
+  <category name="Variables" colour="#A65C81" custom="VARIABLE"></category>
+  <category name="Functions" colour="#9A5CA6" custom="PROCEDURE"></category>
+ </xml>
+
+</body>
+
+<script>
+;
+
+var term;
+var ws;
+var connected = false;
+var binary_state = 0;
+var put_file_name = null;
+var put_file_data = null;
+var get_file_name = null;
+var get_file_data = null;
+
+function calculate_size(win) {
+    var cols = Math.max(80, Math.min(150, (win.innerWidth - 280) / 7)) | 0;
+    //var rows = Math.max(24, Math.min(80, (win.innerHeight - 180) / 12)) | 0;
+	var rows = Math.round(((win.innerHeight*0.2) / 12)-1);															
+	//return [cols,9];
+	//alert(document.getElementById('.terminal').element.style.height);
+    return [cols, rows];
+}
+
+(function() {
+    window.onload = function() {
+      var size = calculate_size(self);
+      term = new Terminal({
+        cols: size[0],
+        rows: size[1],
+        useStyle: true,
+        screenKeys: true,
+        cursorBlink: false
+      });
+      term.open(document.getElementById("term"));
+      show_https_warning();
+    };
+    window.addEventListener('resize', function() {
+        var size = calculate_size(self);
+        term.resize(size[0], size[1]);
+    });
+}).call(this);
+
+function show_https_warning() {
+    if (window.location.protocol == 'https:') {
+        var warningDiv = document.createElement('div');
+        warningDiv.style.cssText = 'background:#f99;padding:5px;margin-bottom:10px;line-height:1.5em;text-align:center';
+        warningDiv.innerHTML = [
+            'At this time, the WebREPL client cannot be accessed over HTTPS connections.',
+            'Use a HTTP connection, eg. <a href="http://micropython.org/webrepl/">http://micropython.org/webrepl/</a>.',
+            'Alternatively, download the files from <a href="https://github.com/micropython/webrepl">GitHub</a> and run them locally.'
+        ].join('<br>');
+        document.body.insertBefore(warningDiv, document.body.childNodes[0]);
+        term.resize(term.cols, term.rows - 7);
+    }
+}
+
+function button_click() {
+    if (connected) {
+        ws.close();
+    } else {
+        document.getElementById('url').disabled = true;
+        document.getElementById('button').value = "Disconnect";
+        connected = true;
+        connect(document.getElementById('url').value);
+    }
+}
+
+function prepare_for_connect() {
+    document.getElementById('url').disabled = false;
+    document.getElementById('button').value = "Connect";
+}
+
+function update_file_status(s) {
+    document.getElementById('file-status').innerHTML = s;
+}
+	
+/////////////////////first message to esp8266///////////////////////////////////////////////////
+function connect(url) {
+	var data11="";
+    ws = new WebSocket(url);
+    ws.binaryType = 'arraybuffer';
+    ws.onopen = function() {
+		ws.send(document.getElementById('web_pw').value+'\r');
+        term.removeAllListeners('data');
+        term.on('data', function(data) {
+            // Pasted data from clipboard will likely contain
+            // LF as EOL chars.
+            data = data.replace(/\n/g, "\r");
+            ws.send(data);
+			
+        });
+
+        term.on('title', function(title) {
+            document.title = title;
+        });
+
+        term.focus();
+        term.element.focus();
+        term.write('\x1b[31mWelcome to MicroPython!\x1b[m\r\n');
+
+        ws.onmessage = function(event) {
+            if (event.data instanceof ArrayBuffer) {
+                var data = new Uint8Array(event.data);
+                switch (binary_state) {
+                    case 11:
+                        // first response for put
+                        if (decode_resp(data) == 0) {
+                            // send file data in chunks
+                            for (var offset = 0; offset < put_file_data.length; offset += 1024) {
+                                ws.send(put_file_data.slice(offset, offset + 1024));
+                            }
+                            binary_state = 12;
+                        }
+                        break;
+                    case 12:
+                        // final response for put
+                        if (decode_resp(data) == 0) {
+                            update_file_status('Sent ' + put_file_name + ', ' + put_file_data.length + ' bytes');
+                        } else {
+                            update_file_status('Failed sending ' + put_file_name);
+                        }
+                        binary_state = 0;
+                        break;
+
+                    case 21:
+                        // first response for get
+                        if (decode_resp(data) == 0) {
+                            binary_state = 22;
+                            var rec = new Uint8Array(1);
+                            rec[0] = 0;
+                            ws.send(rec);
+                        }
+                        break;
+                    case 22: {
+                        // file data
+                        var sz = data[0] | (data[1] << 8);
+                        if (data.length == 2 + sz) {
+                            // we assume that the data comes in single chunks
+                            if (sz == 0) {
+                                // end of file
+                                binary_state = 23;
+                            } else {
+                                // accumulate incoming data to get_file_data
+                                var new_buf = new Uint8Array(get_file_data.length + sz);
+                                new_buf.set(get_file_data);
+                                new_buf.set(data.slice(2), get_file_data.length);
+                                get_file_data = new_buf;
+                                update_file_status('Getting ' + get_file_name + ', ' + get_file_data.length + ' bytes');
+
+                                var rec = new Uint8Array(1);
+                                rec[0] = 0;
+                                ws.send(rec);
+                            }
+                        } else {
+                            binary_state = 0;
+                        }
+                        break;
+                    }
+                    case 23:
+                        // final response
+                        if (decode_resp(data) == 0) {
+                            update_file_status('Got ' + get_file_name + ', ' + get_file_data.length + ' bytes');
+                            saveAs(new Blob([get_file_data], {type: "application/octet-stream"}), get_file_name);
+                        } else {
+                            update_file_status('Failed getting ' + get_file_name);
+                        }
+                        binary_state = 0;
+                        break;
+                    case 31:
+                        // first (and last) response for GET_VER
+                        console.log('GET_VER', data);
+                        binary_state = 0;
+                        break;
+                }
+            }
+            term.write(event.data);
+			data11=new String(event.data+"");
+        };
+    };
+
+    ws.onclose = function() {
+        connected = false;
+        if (term) {
+            term.write('\x1b[31mDisconnected\x1b[m\r\n');
+        }
+        term.off('data');
+        prepare_for_connect();
+    }
+}
+
+function decode_resp(data) {
+    if (data[0] == 'W'.charCodeAt(0) && data[1] == 'B'.charCodeAt(0)) {
+        var code = data[2] | (data[3] << 8);
+        return code;
+    } else {
+        return -1;
+    }
+}
+
+function put_file() {
+    var dest_fname = put_file_name;
+    var dest_fsize = put_file_data.length;
+
+    // WEBREPL_FILE = "<2sBBQLH64s"
+    var rec = new Uint8Array(2 + 1 + 1 + 8 + 4 + 2 + 64);
+    rec[0] = 'W'.charCodeAt(0);
+    rec[1] = 'A'.charCodeAt(0);
+    rec[2] = 1; // put
+    rec[3] = 0;
+    rec[4] = 0; rec[5] = 0; rec[6] = 0; rec[7] = 0; rec[8] = 0; rec[9] = 0; rec[10] = 0; rec[11] = 0;
+    rec[12] = dest_fsize & 0xff; rec[13] = (dest_fsize >> 8) & 0xff; rec[14] = (dest_fsize >> 16) & 0xff; rec[15] = (dest_fsize >> 24) & 0xff;
+    rec[16] = dest_fname.length & 0xff; rec[17] = (dest_fname.length >> 8) & 0xff;
+    for (var i = 0; i < 64; ++i) {
+        if (i < dest_fname.length) {
+            rec[18 + i] = dest_fname.charCodeAt(i);
+        } else {
+            rec[18 + i] = 0;
+        }
+    }
+
+    // initiate put
+    binary_state = 11;
+    update_file_status('Sending ' + put_file_name + '...');
+    ws.send(rec);
+}
+
+function get_file() {
+    var src_fname = document.getElementById('get_filename').value;
+
+    // WEBREPL_FILE = "<2sBBQLH64s"
+    var rec = new Uint8Array(2 + 1 + 1 + 8 + 4 + 2 + 64);
+    rec[0] = 'W'.charCodeAt(0);
+    rec[1] = 'A'.charCodeAt(0);
+    rec[2] = 2; // get
+    rec[3] = 0;
+    rec[4] = 0; rec[5] = 0; rec[6] = 0; rec[7] = 0; rec[8] = 0; rec[9] = 0; rec[10] = 0; rec[11] = 0;
+    rec[12] = 0; rec[13] = 0; rec[14] = 0; rec[15] = 0;
+    rec[16] = src_fname.length & 0xff; rec[17] = (src_fname.length >> 8) & 0xff;
+    for (var i = 0; i < 64; ++i) {
+        if (i < src_fname.length) {
+            rec[18 + i] = src_fname.charCodeAt(i);
+        } else {
+            rec[18 + i] = 0;
+        }
+    }
+
+    // initiate get
+    binary_state = 21;
+    get_file_name = src_fname;
+    get_file_data = new Uint8Array(0);
+    update_file_status('Getting ' + get_file_name + '...');
+    ws.send(rec);
+}
+
+function get_ver() {
+    // WEBREPL_REQ_S = "<2sBBQLH64s"
+    var rec = new Uint8Array(2 + 1 + 1 + 8 + 4 + 2 + 64);
+    rec[0] = 'W'.charCodeAt(0);
+    rec[1] = 'A'.charCodeAt(0);
+    rec[2] = 3; // GET_VER
+    // rest of "rec" is zero
+
+    // initiate GET_VER
+    binary_state = 31;
+    ws.send(rec);
+}
+
+function handle_put_file_select(evt) {
+    // The event holds a FileList object which is a list of File objects,
+    // but we only support single file selection at the moment.
+    var files = evt.target.files;
+
+    // Get the file info and load its data.
+    var f = files[0];
+    put_file_name = f.name;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        put_file_data = new Uint8Array(e.target.result);
+        document.getElementById('put-file-list').innerHTML = '' + escape(put_file_name) + ' - ' + put_file_data.length + ' bytes';
+        document.getElementById('put-file-button').disabled = false;
+    };
+    reader.readAsArrayBuffer(f);
+}
+
+document.getElementById('put-file-select').addEventListener('click', function(){
+    this.value = null;
+}, false);
+
+document.getElementById('put-file-select').addEventListener('change', handle_put_file_select, false);
+document.getElementById('put-file-button').disabled = true;
+
+</script>
+<script> 
+  ;
+  function showCodePy() {
+	
+   // Generate Python code and display it.
+	var code = Blockly.Python.workspaceToCode();
+	//document.write(code);
+	alert(code);
+	}
+   function saveCodePy() {
+  //var fileName = window.prompt('What would you like to name your file?', 'main')
+  //doesn't save if the user quits the save prompt
+  var fileName = 'main'
+  if(fileName){
+    var blob = new Blob([Blockly.Python.workspaceToCode()], {type: 'text/html'});
+    saveAs(blob, 'main' + '.py');
+  }
+}
+  function get_file_namme(){
+  var file= window.prompt('What is the name of your file?', 'main.py');
+  document.getElementById('get_filename').value=file;
+  get_file(); return false;
+  }
+  
+  function send_py(){
+	
+    put_file_name = "pkj.py";
+	var blob = new Blob([Blockly.Python.workspaceToCode()], {type: 'text/html'});
+	
+	var arrayBuffer;
+	var fileReader = new FileReader();
+	fileReader.onload = function() {
+		put_file_data = new Uint8Array(this.result);
+		document.getElementById('put-file-list').innerHTML = '' + escape(put_file_name) + ' - ' + put_file_data.length + ' bytes';
+        document.getElementById('put-file-button').disabled = false;
+	};
+	fileReader.readAsArrayBuffer(blob);
+	
+
+}
+	function restart1(){
+		document.getElementById('url').disabled=false;
+		document.getElementById('button').value='connect';
+		connected=false;
+		ws.onclose;
+	}
+  
+</script>
+
+
+
+</html>
