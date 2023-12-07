@@ -6,6 +6,7 @@
 <body>
   <script>
     var bluetoothDevice;
+    var write_cmd = null;
 
     function content(divSelector, value) {
         document.getElementById(divSelector).textContent = value;
@@ -30,6 +31,7 @@
   
     function connectToDevice() {
       bluetoothDevice = null;
+      write_cmd = null;
       navigator.bluetooth.requestDevice({ 
                                             filters: [ { namePrefix: "ACR" },],  optionalServices: ['generic_access', 'battery_service', 'device_information', '00003970-817c-48df-8db2-476a8134ede0',] })
         .then(device => {
@@ -65,9 +67,12 @@
             c_device_information =  s_device_information.getCharacteristics();//'model_number_string');
             c_card_notice = s_card_service.getCharacteristic('00003973-817c-48df-8db2-476a8134ede0');
             
-            return Promise.all([c_battery_service, c_generic_access, c_device_information, c_card_notice]);
+            c_card_write_cmd = s_card_service.getCharacteristic('00003971-817c-48df-8db2-476a8134ede0');
+            c_card_notice_cmd = s_card_service.getCharacteristic('00003972-817c-48df-8db2-476a8134ede0');
+            
+            return Promise.all([c_battery_service, c_generic_access, c_device_information, c_card_notice, c_card_write_cmd, c_card_notice_cmd]);
         })
-        .then(([c_battery_service, c_generic_access, c_device_information, c_card_notice]) => {
+        .then(([c_battery_service, c_generic_access, c_device_information, c_card_notice, c_card_write_cmd, c_card_notice_cmd]) => {
             // Setup notification.....
             let queue = Promise.resolve();
             c_generic_access.forEach(c_generic_access => {
@@ -128,21 +133,26 @@
 
                     case BluetoothUUID.getCharacteristic('system_id'):
                       queue = queue.then(_ => c_device_information.readValue()).then(value => {
-                        console.log('> System ID: ');
-                        console.log('  > Manufacturer Identifier: ' +
-                            //padHex(value.getUint8(4)) + padHex(value.getUint8(3)) +
-                            padHex(value.getUint8(0)) + padHex(value.getUint8(1)) +
-                            padHex(value.getUint8(2)));
-                        console.log('  > Organizationally Unique Identifier: ' +
-                            padHex(value.getUint8(5)) + padHex(value.getUint8(6)) +
-                            padHex(value.getUint8(7)));
-                            var output_str = '> System ID: ' + '\n' + '  > Manufacturer Identifier: ' +
-                            //padHex(value.getUint8(4)) + padHex(value.getUint8(3)) +
-                            padHex(value.getUint8(0)) + padHex(value.getUint8(1)) +
-                            padHex(value.getUint8(2)) + '\n' + '  > Organizationally Unique Identifier: ' +
-                            padHex(value.getUint8(5)) + padHex(value.getUint8(6)) +
-                            padHex(value.getUint8(7));
-                            contentAppendtoDeviceInfo("device_info", output_str);
+                      try{
+                            console.log('> System ID: ');
+                            console.log('  > Manufacturer Identifier: ' +
+                                //padHex(value.getUint8(4)) + padHex(value.getUint8(3)) +
+                                padHex(value.getUint8(0)) + padHex(value.getUint8(1)) +
+                                padHex(value.getUint8(2)));
+                            console.log('  > Organizationally Unique Identifier: ' +
+                                padHex(value.getUint8(5)) + padHex(value.getUint8(6)) +
+                                padHex(value.getUint8(7)));
+                                var output_str = '> System ID: ' + '\n' + '  > Manufacturer Identifier: ' +
+                                //padHex(value.getUint8(4)) + padHex(value.getUint8(3)) +
+                                padHex(value.getUint8(0)) + padHex(value.getUint8(1)) +
+                                padHex(value.getUint8(2)) + '\n' + '  > Organizationally Unique Identifier: ' +
+                                padHex(value.getUint8(5)) + padHex(value.getUint8(6)) +
+                                padHex(value.getUint8(7));
+                                contentAppendtoDeviceInfo("device_info", output_str);
+                        }
+                        catch{
+                            console.log("error in getting System ID");
+                        }
                             
                       });
                       break;
@@ -182,14 +192,18 @@
             
             n_battery_service = c_battery_service.startNotifications();
             n_card_notice = c_card_notice.startNotifications();
-            return Promise.all([n_battery_service, n_card_notice]);
+            n_card_notice_cmd = c_card_notice_cmd.startNotifications();
+            write_cmd = c_card_write_cmd;
+            return Promise.all([n_battery_service, n_card_notice, n_card_notice_cmd]);
         })
-        .then(([n_battery_service, n_card_notice]) => {
+        .then(([n_battery_service, n_card_notice, n_card_notice_cmd]) => {
             // Set up event listener for when characteristic value changes.
             n_battery_service.addEventListener('characteristicvaluechanged',
                                             handleBatteryLevelChanged);
             n_card_notice.addEventListener('characteristicvaluechanged',
                                             handleCardTapNoticeChanged);
+            n_card_notice_cmd.addEventListener('characteristicvaluechanged',
+                                            handleCardCMDNoticeChanged);
             // Reading Battery Level…
             return n_battery_service.readValue();
         })
@@ -214,13 +228,32 @@
           console.log(cardTaped);
           console.log(cardTaped == "5002");
           if(cardTaped == "5002"){
-            content("card_taped", ("Card state       : " + "ABSENT"));
-            console.log('Card is ' + "ABSENT");
+            content("card_taped", ("PICC Card state       : " + "ABSENT"));
+            console.log('PICC Card is ' + "ABSENT");
           }
           else if(cardTaped == "5003"){
-            content("card_taped", ("Card state       : " + "PRESENT"));
-            console.log('Card is ' + "PRESENT");
+            content("card_taped", ("PICC Card state       : " + "PRESENT"));
+            console.log('PICC Card is ' + "PRESENT");
+            // get ATR with hardcode power on
+            var power_on_buff = new ArrayBuffer(19);
+            const uint8_power_on_buff = new Uint8Array(power_on_buff);
+            uint8_power_on_buff.set([0x55, 0x00, 0x00, 0x0A, 0x00, 0x00, 0x00, 0x62, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x69, 0xAA]);
+            write_cmd.writeValueWithoutResponse(uint8_power_on_buff,response = 'never');
+          
           }
+          
+        }
+        
+        function handleCardCMDNoticeChanged(event) {
+          var decoder = new TextDecoder("utf-8");
+          var uint8_buf = new Uint8Array(event.target.value.buffer);
+          var cardTaped = "";
+          console.log(uint8_buf);
+          for(var i=17; i < uint8_buf.length-2;i++){ // this is hardcode
+            cardTaped += uint8_buf[i].toString(16).padStart(2, '0').toUpperCase() + " ";
+            console.log(uint8_buf[i].toString(16).padStart(2, '0').toUpperCase() + " ");
+          }
+          content("card_atr", "PICC Card ATR          : "+ cardTaped);
           
         }
     }
@@ -299,15 +332,99 @@
           (value in valueToUsbVendorName ? ' (' + valueToUsbVendorName[value] + ')' : '');
     }
     
+    function sendWriteCMD(cmd){
+        if(write_cmd != null)
+        {
+            const buffer = new ArrayBuffer(1);
+            buffer[0] = 0x55;
+            write_cmd.writeValueWithoutResponse(buffer,response = 'never');
+        }
+    }
+    
+  </script>
+  <script>
+      async function onRSSIButtonClick() {
+      let filters = [];
+
+      /*let filterName = document.querySelector('#name').value;
+      if (filterName) {
+        filters.push({name: filterName});
+      }*/
+
+      let filterNamePrefix = "ACR" ;//document.querySelector('#namePrefix').value;
+      if (filterNamePrefix) {
+        filters.push({namePrefix: filterNamePrefix});
+      }
+
+      let options = {};
+      if (0){//document.querySelector('#allAdvertisements').checked) {
+        options.acceptAllAdvertisements = true;
+      } else {
+        options.filters = filters;
+      }
+
+      try {
+        console.log('Requesting Bluetooth Scan with options: ' + JSON.stringify(options));
+        const scan = await navigator.bluetooth.requestLEScan(options);
+
+        console.log('Scan started with:');
+        console.log(' acceptAllAdvertisements: ' + scan.acceptAllAdvertisements);
+        console.log(' active: ' + scan.active);
+        console.log(' keepRepeatedDevices: ' + scan.keepRepeatedDevices);
+        console.log(' filters: ' + JSON.stringify(scan.filters));
+
+        navigator.bluetooth.addEventListener('advertisementreceived', event => {
+          console.log('Advertisement received.');
+          console.log('  Device Name: ' + event.device.name);
+          console.log('  Device ID: ' + event.device.id);
+          console.log('  RSSI: ' + event.rssi);
+          console.log('  TX Power: ' + event.txPower);
+          console.log('  UUIDs: ' + event.uuids);
+          event.manufacturerData.forEach((valueDataView, key) => {
+            logDataView('Manufacturer', key, valueDataView);
+          });
+          event.serviceData.forEach((valueDataView, key) => {
+            logDataView('Service', key, valueDataView);
+          });
+        });
+
+        setTimeout(stopScan, 10000);
+        function stopScan() {
+          console.log('Stopping scan...');
+          scan.stop();
+          console.log('Stopped.  scan.active = ' + scan.active);
+        }
+      } catch(error)  {
+        console.log('Argh! ' + error);
+      }
+    }
+
+    /* Utils */
+
+    const logDataView = (labelOfDataSource, key, valueDataView) => {
+      const hexString = [...new Uint8Array(valueDataView.buffer)].map(b => {
+        return b.toString(16).padStart(2, '0');
+      }).join(' ');
+      const textDecoder = new TextDecoder('ascii');
+      const asciiString = textDecoder.decode(valueDataView.buffer);
+      console.log(`  ${labelOfDataSource} Data: ` + key +
+          '\n    (Hex) ' + hexString +
+          '\n    (ASCII) ' + asciiString);
+    };
   </script>
   <h1>Web Bluetooth</h1>
   <h2 id="connection_state">STATUS</h2>
-  <div id="battery_lv">battery level    : </div>
-  <div id="card_taped">Card state       : </div>
+  <div id="battery_lv">battery level               : </div>
+  <div id="card_taped">PICC Card state                 : </div>
+  <div id="card_atr">PICC Card ATR                : </div>
   <br>
   
   <button onclick="connectToDevice()">Connect to Device</button>
   <button onclick="onDisconnectButtonClick()">Disconnect from Device</button>
+  <br>
+  <br>
+  <button onclick="sendWriteCMD()">Write CMD</button>
+  <!-- <button> onclick="onRSSIButtonClick()">GET RSSI</button> -->
   <div id="device_info"></div>
   <script>
         const valueToDeviceType = {
