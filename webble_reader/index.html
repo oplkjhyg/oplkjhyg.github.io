@@ -14,6 +14,14 @@
         document.getElementById(divSelector).style.color = value;
     }
     
+    function contentAppendtoDeviceInfo(divSelector, value) {
+        document.getElementById(divSelector).innerHTML +=  "<pre>" + "\n" + value + "</pre>";
+    }
+    
+    function clearContent(divSelector) {
+        document.getElementById(divSelector).innerHTML = "";
+    }
+    
     function buf2hex(buffer) { // buffer is an ArrayBuffer
       return [...new Uint8Array(buffer)]
           .map(x => x.toString(16).padStart(2, '0'))
@@ -31,6 +39,10 @@
             console.log('> Name:             ' + device.name);
             console.log('> Id:               ' + device.id);
             console.log('> Connected:        ' + device.gatt.connected);
+            contentAppendtoDeviceInfo("device_info", '> Name:             ' + device.name);
+            contentAppendtoDeviceInfo("device_info", '> Id:               ' + device.id);
+            contentAppendtoDeviceInfo("device_info", '> Connected:        ' + device.gatt.connected);
+            
             return device.gatt.connect();
             
         })
@@ -82,70 +94,84 @@
                     case BluetoothUUID.getCharacteristic('manufacturer_name_string'):
                       queue = queue.then(_ => c_device_information.readValue()).then(value => {
                         console.log('> Manufacturer Name String: ' + decoder.decode(value));
+                        contentAppendtoDeviceInfo("device_info", '> Manufacturer Name String: ' + decoder.decode(value));
                       });
                       break;
 
                     case BluetoothUUID.getCharacteristic('model_number_string'):
                       queue = queue.then(_ => c_device_information.readValue()).then(value => {
                         console.log('> Model Number String: ' + decoder.decode(value));
+                        contentAppendtoDeviceInfo("device_info", '> Model Number String: ' + decoder.decode(value));
                       });
                       break;
 
                     case BluetoothUUID.getCharacteristic('hardware_revision_string'):
                       queue = queue.then(_ => c_device_information.readValue()).then(value => {
                         console.log('> Hardware Revision String: ' + decoder.decode(value));
+                        contentAppendtoDeviceInfo("device_info", '> Hardware Revision String: ' + decoder.decode(value));
                       });
                       break;
 
                     case BluetoothUUID.getCharacteristic('firmware_revision_string'):
                       queue = queue.then(_ => c_device_information.readValue()).then(value => {
                         console.log('> Firmware Revision String: ' + decoder.decode(value));
+                        contentAppendtoDeviceInfo("device_info", '> Firmware Revision String: ' + decoder.decode(value));
                       });
                       break;
 
                     case BluetoothUUID.getCharacteristic('software_revision_string'):
                       queue = queue.then(_ => c_device_information.readValue()).then(value => {
                         console.log('> Software Revision String: ' + decoder.decode(value));
+                        contentAppendtoDeviceInfo("device_info", '> Software Revision String: ' + decoder.decode(value));
                       });
                       break;
 
                     case BluetoothUUID.getCharacteristic('system_id'):
                       queue = queue.then(_ => c_device_information.readValue()).then(value => {
-                        console.log(value);
                         console.log('> System ID: ');
                         console.log('  > Manufacturer Identifier: ' +
-                            padHex(value.getUint8(4)) + padHex(value.getUint8(3)) +
-                            padHex(value.getUint8(2)) + padHex(value.getUint8(1)) +
-                            padHex(value.getUint8(0)));
+                            //padHex(value.getUint8(4)) + padHex(value.getUint8(3)) +
+                            padHex(value.getUint8(0)) + padHex(value.getUint8(1)) +
+                            padHex(value.getUint8(2)));
                         console.log('  > Organizationally Unique Identifier: ' +
-                            padHex(value.getUint8(7)) + padHex(value.getUint8(6)) +
-                            padHex(value.getUint8(5)));
-                      });
-                      break;
-
-                    case BluetoothUUID.getCharacteristic('ieee_11073-20601_regulatory_certification_data_list'):
-                      queue = queue.then(_ => c_device_information.readValue()).then(value => {
-                        console.log('> IEEE 11073-20601 Regulatory Certification Data List: ' +
-                            decoder.decode(value));
+                            padHex(value.getUint8(5)) + padHex(value.getUint8(6)) +
+                            padHex(value.getUint8(7)));
+                            var output_str = '> System ID: ' + '\n' + '  > Manufacturer Identifier: ' +
+                            //padHex(value.getUint8(4)) + padHex(value.getUint8(3)) +
+                            padHex(value.getUint8(0)) + padHex(value.getUint8(1)) +
+                            padHex(value.getUint8(2)) + '\n' + '  > Organizationally Unique Identifier: ' +
+                            padHex(value.getUint8(5)) + padHex(value.getUint8(6)) +
+                            padHex(value.getUint8(7));
+                            contentAppendtoDeviceInfo("device_info", output_str);
+                            
                       });
                       break;
 
                     case BluetoothUUID.getCharacteristic('pnp_id'):
                       queue = queue.then(_ => c_device_information.readValue()).then(value => {
+                        var output_str;
                         console.log('> PnP ID:');
+                        output_str += '> PnP ID:';
                         console.log('  > Vendor ID Source: ' +
                             (value.getUint8(0) === 1 ? 'Bluetooth' : 'USB'));
+                        output_str += '\n' + '  > Vendor ID Source: ' + (value.getUint8(0) === 1 ? 'Bluetooth' : 'USB');
                         if (value.getUint8(0) === 1) {
                           console.log('  > Vendor ID: ' +
                               (value.getUint8(1) | value.getUint8(2) << 8));
+                              output_str += '\n' + '  > Vendor ID: ' + (value.getUint8(1) | value.getUint8(2) << 8) + '(0x' + (value.getUint8(1) | value.getUint8(2) << 8).toString(16) + ')' ;
                         } else {
                           console.log('  > Vendor ID: ' +
                               getUsbVendorName(value.getUint8(1) | value.getUint8(2) << 8));
+                              output_str += '\n' + '  > Vendor ID: ' + getUsbVendorName(value.getUint8(1) | value.getUint8(2) << 8) + '(0x' + (value.getUint8(1) | value.getUint8(2) << 8).toString(16) + ')';
                         }
                         console.log('  > Product ID: ' +
                             (value.getUint8(3) | value.getUint8(4) << 8));
                         console.log('  > Product Version: ' +
                             (value.getUint8(5) | value.getUint8(6) << 8));
+                            output_str += '\n' + '  > Product ID: ' + (value.getUint8(3) | value.getUint8(4) << 8) 
+                            + '(0x' + (value.getUint8(3) | value.getUint8(4) << 8).toString(16) + ')' + '\n' + '  > Product Version: ' +(value.getUint8(5) | value.getUint8(6) << 8)
+                            + '(0x' + (value.getUint8(5) | value.getUint8(6) << 8).toString(16) + ')';
+                        contentAppendtoDeviceInfo("device_info",output_str);
                       });
                       break;
 
@@ -203,12 +229,14 @@
       return characteristic.readValue().then(value => {
         console.log('> Appearance: ' +
             getDeviceType(value.getUint16(0, true /* Little Endian */)));
+            contentAppendtoDeviceInfo("device_info", '> Appearance: ' + getDeviceType(value.getUint16(0, true /* Little Endian */)));
       });
     }
 
     function readDeviceNameValue(characteristic) {
       return characteristic.readValue().then(value => {
         console.log('> Device Name: ' + new TextDecoder().decode(value));
+        contentAppendtoDeviceInfo("device_info", '> Device Name: ' + new TextDecoder().decode(value));
       });
     }
 
@@ -223,6 +251,13 @@
             (value.getUint8(4) | value.getUint8(5) << 8) + 'ms');
         console.log('  > Connection Supervision Timeout Multiplier: ' +
             (value.getUint8(6) | value.getUint8(7) << 8));
+            
+            var output_str = '> Peripheral Preferred Connection Parameters: ' + '\n' + '  > Minimum Connection Interval: ' +
+            (value.getUint8(0) | value.getUint8(1) << 8) * 1.25 + 'ms' + '\n' + '  > Maximum Connection Interval: ' +
+            (value.getUint8(2) | value.getUint8(3) << 8) * 1.25 + 'ms' + '\n' + '  > Latency: ' +
+            (value.getUint8(4) | value.getUint8(5) << 8) + 'ms' + '\n' + '  > Connection Supervision Timeout Multiplier: ' +
+            (value.getUint8(6) | value.getUint8(7) << 8);
+            contentAppendtoDeviceInfo("device_info", output_str);
       });
     }
     
@@ -245,6 +280,7 @@
       console.log('> Bluetooth Device disconnected');
       content("connection_state", "DISCONNECTED");//disconnected will go here
       contentChangeColor("connection_state", "red");
+      clearContent("device_info");
     }
     
     function getDeviceType(value) {
@@ -269,9 +305,10 @@
   <div id="battery_lv">battery level    : </div>
   <div id="card_taped">Card state       : </div>
   <br>
+  
   <button onclick="connectToDevice()">Connect to Device</button>
   <button onclick="onDisconnectButtonClick()">Disconnect from Device</button>
-  
+  <div id="device_info"></div>
   <script>
         const valueToDeviceType = {
              0: 'Unknown',
