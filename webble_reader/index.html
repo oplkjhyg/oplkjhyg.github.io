@@ -29,6 +29,7 @@
           .map(x => x.toString(16).padStart(2, '0'))
           .join('');
     }
+    
   
     function connectToDevice() {
       bluetoothDevice = null;
@@ -269,6 +270,11 @@
           }
           txt.value += cardTaped +'\n';
           document.getElementById("CCID_log").scrollTop = document.getElementById("CCID_log").scrollHeight;
+          
+          if(txt.value.split("\n").length >3000){
+            txt.value = "";
+          }
+          
           console.log(uint8_buf[7] == 0x80);
           console.log(uint8_buf[7]);
           if(uint8_buf[7] == 0x80 && previous_cmd == 0x62){
@@ -339,6 +345,11 @@
       content("connection_state", "DISCONNECTED");//disconnected will go here
       contentChangeColor("connection_state", "red");
       clearContent("device_info");
+      if(cmd_interval_id != null){
+          clearInterval(cmd_interval_id);
+          cmd_interval_id = null;
+          document.getElementById("loopButton").innerHTML = "Loop command";
+      }
     }
     
     function getDeviceType(value) {
@@ -383,8 +394,21 @@
             //write_cmd.writeValueWithoutResponse(buffer,response = 'never');
             try{
                 var ccid_cmd = document.getElementById("CCID_cmd_in").value;
+                const cmdTypeRadio = document.getElementsByName("commandType");
+                var output_data = null;
+                for(var i = 0; i< cmdTypeRadio.length; i++)
+                {
+                    if(cmdTypeRadio[i].value == "xblk" && cmdTypeRadio[i].checked == true)
+                    {
+                        output_data = construct_CCID_Xblk(ccid_cmd.replace(/\s/g, ''));
+                    }
+                    else if(cmdTypeRadio[i].value == "esc" && cmdTypeRadio[i].checked == true)
+                    {
+                        output_data = construct_CCID_Esc(ccid_cmd.replace(/\s/g, ''));
+                    }
+                }
                 
-                var output_data = construct_CCID_Xblk(ccid_cmd.replace(/\s/g, ''));
+                
                 output_data = construct_ble_header(output_data);
                 output_data = construct_ble_footer(output_data);
                 write_cmd.writeValueWithoutResponse(fromHexString(output_data).buffer,response = 'never');
@@ -405,6 +429,11 @@
         }
         else{
             alert("Please connect to device");
+             if(cmd_interval_id != null){
+                clearInterval(cmd_interval_id);
+                cmd_interval_id = null;
+                document.getElementById("loopButton").innerHTML = "Loop command";
+            }
         }
     }
     
@@ -441,6 +470,24 @@
         var ccid_header = "";
         ccid_header += "6F";
         previous_cmd = 0x6f;
+        var size_of_cmd = cmd.length/2;
+        for(var i=0;i<4;i++){
+            ccid_header += (((size_of_cmd) >> (8*i)) & 0xff).toString(16).padStart(2, '0').toUpperCase();
+            
+        }
+        ccid_header += "00";
+        ccid_header += (ccid_seq & 0xff).toString(16).padStart(2, '0').toUpperCase();
+        ccid_seq +=1;
+        ccid_header += "00";
+        ccid_header += "00";
+        ccid_header += "00";
+        return ccid_header+cmd;
+    }
+    
+    function construct_CCID_Esc(cmd){
+        var ccid_header = "";
+        ccid_header += "6B";
+        previous_cmd = 0x6b;
         var size_of_cmd = cmd.length/2;
         for(var i=0;i<4;i++){
             ccid_header += (((size_of_cmd) >> (8*i)) & 0xff).toString(16).padStart(2, '0').toUpperCase();
@@ -562,7 +609,14 @@
   <br>
   <fieldset>
     <legend>CCID command</legend>
+    <div>
+      <input type="radio" id="xblockCMD" name="commandType" value="xblk" checked/>
+      <label for="xblockCMD">Xblock command</label>
 
+      <input type="radio" id="escCMD" name="commandType" value="esc" />
+      <label for="escCMD">Escape command</label>
+    </div>
+    <br>
     <input type="text" placeholder="Command input" id="CCID_cmd_in">
     <a> e.g. 80 84 00 00 08 </a>
     <br>
