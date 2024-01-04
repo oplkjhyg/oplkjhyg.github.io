@@ -57,13 +57,13 @@
             contentAppendtoDeviceInfo("device_info", '> Connected:        ' + device.gatt.connected);
             //getPrimaryService
             const s_battery_service = await server.getPrimaryService('battery_service');
-            const s_generic_access =  await server.getPrimaryService('generic_access');
+            //const s_generic_access =  await server.getPrimaryService('generic_access');
             const s_device_information =  await server.getPrimaryService('device_information');
             const s_card_service = await server.getPrimaryService('00003970-817c-48df-8db2-476a8134ede0');
             
             // getCharacteristic
             const c_battery_service = await s_battery_service.getCharacteristic('battery_level');
-            const c_generic_access =  await s_generic_access.getCharacteristics();//'gap.device_name');
+            //const c_generic_access =  await s_generic_access.getCharacteristics();//'gap.device_name');
             const c_device_information =  await s_device_information.getCharacteristics();//'model_number_string');
             const c_card_notice = await s_card_service.getCharacteristic('00003973-817c-48df-8db2-476a8134ede0');
             
