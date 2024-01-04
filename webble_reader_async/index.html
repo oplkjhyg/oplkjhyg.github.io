@@ -31,179 +31,180 @@
     }
     
   
-    function connectToDevice() {
+    async function connectToDevice() {
       bluetoothDevice = null;
       write_cmd = null;
-      navigator.bluetooth.requestDevice({ 
+      const device = await navigator.bluetooth.requestDevice({ 
                                             filters: [ { namePrefix: "ACR" },],  optionalServices: ['generic_access', 'battery_service', 'device_information', '00003970-817c-48df-8db2-476a8134ede0',] })
-        .then(device => {
+        //.then(device => {
           // Connect to the selected device and perform further operations
             bluetoothDevice = device;
+            const server = await device.gatt.connect();
+            if (device.gatt.connected){
+                onConnected();
+            }
+            else{
+                onDisconnected();
+            }
+            //bluetoothDevice.addEventListener('serviceadded', onConnected);
             bluetoothDevice.addEventListener('gattserverdisconnected', onDisconnected);
+            console.log(server);
             console.log('> Name:             ' + device.name);
             console.log('> Id:               ' + device.id);
             console.log('> Connected:        ' + device.gatt.connected);
             contentAppendtoDeviceInfo("device_info", '> Name:             ' + device.name);
             contentAppendtoDeviceInfo("device_info", '> Id:               ' + device.id);
             contentAppendtoDeviceInfo("device_info", '> Connected:        ' + device.gatt.connected);
+            //getPrimaryService
+            const s_battery_service = await server.getPrimaryService('battery_service');
+            const s_generic_access =  await server.getPrimaryService('generic_access');
+            const s_device_information =  await server.getPrimaryService('device_information');
+            const s_card_service = await server.getPrimaryService('00003970-817c-48df-8db2-476a8134ede0');
             
-            return device.gatt.connect();
+            // getCharacteristic
+            const c_battery_service = await s_battery_service.getCharacteristic('battery_level');
+            const c_generic_access =  await s_generic_access.getCharacteristics();//'gap.device_name');
+            const c_device_information =  await s_device_information.getCharacteristics();//'model_number_string');
+            const c_card_notice = await s_card_service.getCharacteristic('00003973-817c-48df-8db2-476a8134ede0');
             
-        })
-        .then(server => {
-            content("connection_state", "CONNECTED");//connected will go here
-            contentChangeColor("connection_state", "green");//connected will go here
-            // Getting Battery Service…
-            //service = server.getPrimaryService('generic_access', 'battery_service', 'device_information', '00003970-817c-48df-8db2-476a8134ede0', );
-            s_battery_service = server.getPrimaryService('battery_service');
-            s_generic_access =  server.getPrimaryService('generic_access');
-            s_device_information =  server.getPrimaryService('device_information');
-            s_card_service = server.getPrimaryService('00003970-817c-48df-8db2-476a8134ede0');
-            return Promise.all([s_battery_service, s_generic_access, s_device_information, s_card_service]);
-        })
-        //.then(service => {
-        .then(([s_battery_service, s_generic_access, s_device_information, s_card_service]) => {
-            // Getting Characteristic.....
-            c_battery_service = s_battery_service.getCharacteristic('battery_level');
-            c_generic_access =  s_generic_access.getCharacteristics();//'gap.device_name');
-            c_device_information =  s_device_information.getCharacteristics();//'model_number_string');
-            c_card_notice = s_card_service.getCharacteristic('00003973-817c-48df-8db2-476a8134ede0');
+            const c_card_write_cmd = await s_card_service.getCharacteristic('00003971-817c-48df-8db2-476a8134ede0');
+            const c_card_notice_cmd = await s_card_service.getCharacteristic('00003972-817c-48df-8db2-476a8134ede0');
             
-            c_card_write_cmd = s_card_service.getCharacteristic('00003971-817c-48df-8db2-476a8134ede0');
-            c_card_notice_cmd = s_card_service.getCharacteristic('00003972-817c-48df-8db2-476a8134ede0');
             
-            return Promise.all([c_battery_service, c_generic_access, c_device_information, c_card_notice, c_card_write_cmd, c_card_notice_cmd]);
-        })
-        .then(([c_battery_service, c_generic_access, c_device_information, c_card_notice, c_card_write_cmd, c_card_notice_cmd]) => {
-            // Setup notification.....
-            let queue = Promise.resolve();
-            c_generic_access.forEach(c_generic_access => {
-                switch (c_generic_access.uuid) {
-                    case BluetoothUUID.getCharacteristic('gap.appearance'):
-                      queue = queue.then(_ => readAppearanceValue(c_generic_access));
-                      break;
+            
+            const decoder = new TextDecoder('utf-8');
+            // generic access
+            // for (const characteristic of c_generic_access) {
+            //     switch (characteristic.uuid) {
+            //         case BluetoothUUID.getCharacteristic('gap.appearance'):
+            //           await readAppearanceValue(characteristic).then(value => {
+            //             console.log('> Appearance Value: ' + decoder.decode(value));
+            //             contentAppendtoDeviceInfo("device_info", '> Manufacturer Name String: ' + decoder.decode(value));
+            //           });
+            //           break;
 
-                    case BluetoothUUID.getCharacteristic('gap.device_name'):
-                      queue = queue.then(_ => readDeviceNameValue(c_generic_access));
-                      break;
+            //         case BluetoothUUID.getCharacteristic('gap.device_name'):
+            //           await readDeviceNameValue(characteristic).then(value => {
+            //             console.log('> DeviceNameValue: ' + decoder.decode(value));
+            //             contentAppendtoDeviceInfo("device_info", '> Manufacturer Name String: ' + decoder.decode(value));
+            //           });
+            //           break;
 
-                    case BluetoothUUID.getCharacteristic('gap.peripheral_preferred_connection_parameters'):
-                      queue = queue.then(_ => readPPCPValue(c_generic_access));
-                      break;
+            //         case BluetoothUUID.getCharacteristic('gap.peripheral_preferred_connection_parameters'):
+            //           await readPPCPValue(characteristic).then(value => {
+            //             console.log('> PPCPValue: ' + decoder.decode(value));
+            //             contentAppendtoDeviceInfo("device_info", '> Manufacturer Name String: ' + decoder.decode(value));
+            //           });
+            //           break;
                     
-                    default: console.log('> Unknown Characteristic: ' + c_generic_access.uuid);
-                }
-            });
-            
-            c_device_information.forEach(c_device_information => {
-                var decoder = new TextDecoder("utf-8");
-                try{
-                    switch (c_device_information.uuid) {
-                        case BluetoothUUID.getCharacteristic('manufacturer_name_string'):
-                          queue = queue.then(_ => c_device_information.readValue()).then(value => {
-                            console.log('> Manufacturer Name String: ' + decoder.decode(value));
-                            contentAppendtoDeviceInfo("device_info", '> Manufacturer Name String: ' + decoder.decode(value));
-                          });
-                          break;
+            //         default: console.log('> Unknown Characteristic: ' + characteristic.uuid);
+            //     }
+            // }
+            //deivce information
+            for (const characteristic of c_device_information) {
+              switch (characteristic.uuid) {
+                case BluetoothUUID.getCharacteristic('manufacturer_name_string'):
+                  await characteristic.readValue().then(value => {
+                    console.log('> Manufacturer Name String: ' + decoder.decode(value));
+                    contentAppendtoDeviceInfo("device_info", '> Manufacturer Name String: ' + decoder.decode(value));
+                  });
+                  break;
 
-                        case BluetoothUUID.getCharacteristic('model_number_string'):
-                          queue = queue.then(_ => c_device_information.readValue()).then(value => {
-                            console.log('> Model Number String: ' + decoder.decode(value));
-                            contentAppendtoDeviceInfo("device_info", '> Model Number String: ' + decoder.decode(value));
-                          });
-                          break;
+                case BluetoothUUID.getCharacteristic('model_number_string'):
+                  await characteristic.readValue().then(value => {
+                    console.log('> Model Number String: ' + decoder.decode(value));
+                    contentAppendtoDeviceInfo("device_info", '> Model Number String: ' + decoder.decode(value));
+                  });
+                  break;
 
-                        case BluetoothUUID.getCharacteristic('hardware_revision_string'):
-                          queue = queue.then(_ => c_device_information.readValue()).then(value => {
-                            console.log('> Hardware Revision String: ' + decoder.decode(value));
-                            contentAppendtoDeviceInfo("device_info", '> Hardware Revision String: ' + decoder.decode(value));
-                          });
-                          break;
+                case BluetoothUUID.getCharacteristic('hardware_revision_string'):
+                  await characteristic.readValue().then(value => {
+                    console.log('> Hardware Revision String: ' + decoder.decode(value));
+                    contentAppendtoDeviceInfo("device_info", '> Hardware Revision String: ' + decoder.decode(value));
+                  });
+                  break;
 
-                        case BluetoothUUID.getCharacteristic('firmware_revision_string'):
-                          queue = queue.then(_ => c_device_information.readValue()).then(value => {
-                            console.log('> Firmware Revision String: ' + decoder.decode(value));
-                            contentAppendtoDeviceInfo("device_info", '> Firmware Revision String: ' + decoder.decode(value));
-                          });
-                          break;
+                case BluetoothUUID.getCharacteristic('firmware_revision_string'):
+                  await characteristic.readValue().then(value => {
+                    console.log('> Firmware Revision String: ' + decoder.decode(value));
+                    contentAppendtoDeviceInfo("device_info", '> Firmware Revision String: ' + decoder.decode(value));
+                  });
+                  break;
 
-                        case BluetoothUUID.getCharacteristic('software_revision_string'):
-                          queue = queue.then(_ => c_device_information.readValue()).then(value => {
-                            console.log('> Software Revision String: ' + decoder.decode(value));
-                            contentAppendtoDeviceInfo("device_info", '> Software Revision String: ' + decoder.decode(value));
-                          });
-                          break;
+                case BluetoothUUID.getCharacteristic('software_revision_string'):
+                  await characteristic.readValue().then(value => {
+                    console.log('> Software Revision String: ' + decoder.decode(value));
+                    contentAppendtoDeviceInfo("device_info", '> Software Revision String: ' + decoder.decode(value));
+                  });
+                  break;
 
-                        case BluetoothUUID.getCharacteristic('system_id'):
-                          queue = queue.then(_ => c_device_information.readValue()).then(value => {
-                          try{
-                                console.log('> System ID: ');
-                                console.log('  > Manufacturer Identifier: ' +
-                                    //padHex(value.getUint8(4)) + padHex(value.getUint8(3)) +
-                                    padHex(value.getUint8(0)) + padHex(value.getUint8(1)) +
-                                    padHex(value.getUint8(2)));
-                                console.log('  > Organizationally Unique Identifier: ' +
-                                    padHex(value.getUint8(5)) + padHex(value.getUint8(6)) +
-                                    padHex(value.getUint8(7)));
-                                    var output_str = '> System ID: ' + '\n' + '  > Manufacturer Identifier: ' +
-                                    //padHex(value.getUint8(4)) + padHex(value.getUint8(3)) +
-                                    padHex(value.getUint8(0)) + padHex(value.getUint8(1)) +
-                                    padHex(value.getUint8(2)) + '\n' + '  > Organizationally Unique Identifier: ' +
-                                    padHex(value.getUint8(5)) + padHex(value.getUint8(6)) +
-                                    padHex(value.getUint8(7));
-                                    contentAppendtoDeviceInfo("device_info", output_str);
-                            }
-                            catch{
-                                console.log("error in getting System ID");
-                            }
-                                
-                          });
-                          break;
-
-                        case BluetoothUUID.getCharacteristic('pnp_id'):
-                          queue = queue.then(_ => c_device_information.readValue()).then(value => {
-                            var output_str;
-                            console.log('> PnP ID:');
-                            output_str += '> PnP ID:';
-                            console.log('  > Vendor ID Source: ' +
-                                (value.getUint8(0) === 1 ? 'Bluetooth' : 'USB'));
-                            output_str += '\n' + '  > Vendor ID Source: ' + (value.getUint8(0) === 1 ? 'Bluetooth' : 'USB');
-                            if (value.getUint8(0) === 1) {
-                              console.log('  > Vendor ID: ' +
-                                  (value.getUint8(1) | value.getUint8(2) << 8));
-                                  output_str += '\n' + '  > Vendor ID: ' + (value.getUint8(1) | value.getUint8(2) << 8) + '(0x' + (value.getUint8(1) | value.getUint8(2) << 8).toString(16) + ')' ;
-                            } else {
-                              console.log('  > Vendor ID: ' +
-                                  getUsbVendorName(value.getUint8(1) | value.getUint8(2) << 8));
-                                  output_str += '\n' + '  > Vendor ID: ' + getUsbVendorName(value.getUint8(1) | value.getUint8(2) << 8) + '(0x' + (value.getUint8(1) | value.getUint8(2) << 8).toString(16) + ')';
-                            }
-                            console.log('  > Product ID: ' +
-                                (value.getUint8(3) | value.getUint8(4) << 8));
-                            console.log('  > Product Version: ' +
-                                (value.getUint8(5) | value.getUint8(6) << 8));
-                                output_str += '\n' + '  > Product ID: ' + (value.getUint8(3) | value.getUint8(4) << 8) 
-                                + '(0x' + (value.getUint8(3) | value.getUint8(4) << 8).toString(16) + ')' + '\n' + '  > Product Version: ' +(value.getUint8(5) | value.getUint8(6) << 8)
-                                + '(0x' + (value.getUint8(5) | value.getUint8(6) << 8).toString(16) + ')';
-                            contentAppendtoDeviceInfo("device_info",output_str);
-                          });
-                          break;
-
-                        default: console.log('> Unknown Characteristic: ' + c_device_information.uuid);
+                case BluetoothUUID.getCharacteristic('system_id'):
+                  await characteristic.readValue().then(value => {
+                  try{
+                        console.log('> System ID: ');
+                        console.log('  > Manufacturer Identifier: ' +
+                            //padHex(value.getUint8(4)) + padHex(value.getUint8(3)) +
+                            padHex(value.getUint8(0)) + padHex(value.getUint8(1)) +
+                            padHex(value.getUint8(2)));
+                        console.log('  > Organizationally Unique Identifier: ' +
+                            padHex(value.getUint8(5)) + padHex(value.getUint8(6)) +
+                            padHex(value.getUint8(7)));
+                            var output_str = '> System ID: ' + '\n' + '  > Manufacturer Identifier: ' +
+                            //padHex(value.getUint8(4)) + padHex(value.getUint8(3)) +
+                            padHex(value.getUint8(0)) + padHex(value.getUint8(1)) +
+                            padHex(value.getUint8(2)) + '\n' + '  > Organizationally Unique Identifier: ' +
+                            padHex(value.getUint8(5)) + padHex(value.getUint8(6)) +
+                            padHex(value.getUint8(7));
+                            contentAppendtoDeviceInfo("device_info", output_str);
                     }
-                }
-                catch{
-                    console.log('oh no');
-                }
-            });
+                    catch{
+                        console.log("error in getting System ID");
+                    }
+                        
+                  });
+                  break;
+
+                case BluetoothUUID.getCharacteristic('pnp_id'):
+                  await characteristic.readValue().then(value => {
+                    var output_str;
+                    console.log('> PnP ID:');
+                    output_str += '> PnP ID:';
+                    console.log('  > Vendor ID Source: ' +
+                        (value.getUint8(0) === 1 ? 'Bluetooth' : 'USB'));
+                    output_str += '\n' + '  > Vendor ID Source: ' + (value.getUint8(0) === 1 ? 'Bluetooth' : 'USB');
+                    if (value.getUint8(0) === 1) {
+                      console.log('  > Vendor ID: ' +
+                          (value.getUint8(1) | value.getUint8(2) << 8));
+                          output_str += '\n' + '  > Vendor ID: ' + (value.getUint8(1) | value.getUint8(2) << 8) + '(0x' + (value.getUint8(1) | value.getUint8(2) << 8).toString(16) + ')' ;
+                    } else {
+                      console.log('  > Vendor ID: ' +
+                          getUsbVendorName(value.getUint8(1) | value.getUint8(2) << 8));
+                          output_str += '\n' + '  > Vendor ID: ' + getUsbVendorName(value.getUint8(1) | value.getUint8(2) << 8) + '(0x' + (value.getUint8(1) | value.getUint8(2) << 8).toString(16) + ')';
+                    }
+                    console.log('  > Product ID: ' +
+                        (value.getUint8(3) | value.getUint8(4) << 8));
+                    console.log('  > Product Version: ' +
+                        (value.getUint8(5) | value.getUint8(6) << 8));
+                        output_str += '\n' + '  > Product ID: ' + (value.getUint8(3) | value.getUint8(4) << 8) 
+                        + '(0x' + (value.getUint8(3) | value.getUint8(4) << 8).toString(16) + ')' + '\n' + '  > Product Version: ' +(value.getUint8(5) | value.getUint8(6) << 8)
+                        + '(0x' + (value.getUint8(5) | value.getUint8(6) << 8).toString(16) + ')';
+                    contentAppendtoDeviceInfo("device_info",output_str);
+                  });
+                  break;
+
+                default: console.log('> Unknown Characteristic: ' + c_device_information.uuid);
+              }
+            }
             
-            n_battery_service = c_battery_service.startNotifications();
-            n_card_notice = c_card_notice.startNotifications();
-            n_card_notice_cmd = c_card_notice_cmd.startNotifications();
+            
+            
+            
+            
+            
+            const n_battery_service = await c_battery_service.startNotifications();
+            const n_card_notice = await c_card_notice.startNotifications();
+            const n_card_notice_cmd = await c_card_notice_cmd.startNotifications();
             write_cmd = c_card_write_cmd;
-            return Promise.all([n_battery_service, n_card_notice, n_card_notice_cmd]);
-        })
-        .then(([n_battery_service, n_card_notice, n_card_notice_cmd]) => {
-            // Set up event listener for when characteristic value changes.
             n_battery_service.addEventListener('characteristicvaluechanged',
                                             handleBatteryLevelChanged);
             
@@ -211,22 +212,7 @@
                                             handleCardTapNoticeChanged);
             n_card_notice_cmd.addEventListener('characteristicvaluechanged',
                                             handleCardCMDNoticeChanged);
-            // Reading Battery Level…
-            return n_battery_service.readValue();
-        })
-        .then(value => {
-            //console.log(`Battery percentage is ${value.getUint8(0)}`);
-        })
-        .catch(error => {
-          console.log('Error: ' + error);
-          bluetoothDevice.addEventListener('gattserverdisconnected', onDisconnected);
-          console.error('Error: ' + error);
-          content("connection_state", "DISCONNECTED");//disconnected will go here
-          contentChangeColor("connection_state", "red");
-          console.log('> Bluetooth Device is already disconnected');
-        });
-        
-        
+       
         function handleBatteryLevelChanged(event) {
           const batteryLevel = event.target.value.getUint8(0);
           content("battery_lv", ("battery level    : " +batteryLevel));
@@ -352,6 +338,13 @@
       }
     }
     
+    function onConnected(event) {
+      // Object event.target is Bluetooth Device getting disconnected.
+      console.log('> Bluetooth Device connected');
+      content("connection_state", "CONNECTED");//connected will go here
+      contentChangeColor("connection_state", "green");//connected will go here
+    }
+    
     function getDeviceType(value) {
       // Check out page source to see what valueToDeviceType object is.
       return value +
@@ -372,20 +365,28 @@
 
     const toHexString = (bytes) =>
       bytes.reduce((str, byte) => str + byte.toString(16).padStart(2, '0'), '');
-      
+      function splitEveryN(str, n) {
+        const arr = [];
+
+        for (let index = 0; index < str.length; index += n) {
+          arr.push(str.slice(index, index + n));
+        }
+
+        return arr;
+      } 
     function resetWriteCMD(){
         if(write_cmd != null)
         {
             const buffer = new ArrayBuffer(1);
             buffer[0] = 0x55;
-            console.log(buffer);
+            // console.log(buffer);
             write_cmd.writeValueWithoutResponse(buffer,response = 'never');
         }
         else{
             alert("Please connect to device");
         }
     }
-    function sendWriteCMD(cmd){
+    async function sendWriteCMD(cmd){
         if(write_cmd != null)
         {
             /*const buffer = new ArrayBuffer(1);
@@ -396,6 +397,8 @@
                 var ccid_cmd = document.getElementById("CCID_cmd_in").value;
                 const cmdTypeRadio = document.getElementsByName("commandType");
                 var output_data = null;
+                var cmd_length = 0;
+                var max_send_length = 0;
                 for(var i = 0; i< cmdTypeRadio.length; i++)
                 {
                     if(cmdTypeRadio[i].value == "xblk" && cmdTypeRadio[i].checked == true)
@@ -407,23 +410,61 @@
                         output_data = construct_CCID_Esc(ccid_cmd.replace(/\s/g, ''));
                     }
                 }
+                // console.log(jscd.os);
                 
                 
-                output_data = construct_ble_header(output_data);
-                output_data = construct_ble_footer(output_data);
-                write_cmd.writeValueWithoutResponse(fromHexString(output_data).buffer,response = 'never');
-                console.log(output_data);
-                console.log(fromHexString(output_data).buffer);
-                //console.log(output_data);
-                /*console.log(ccid_cmd.replace(/\s/g, ''));
-                console.log(fromHexString(ccid_cmd.replace(/\s/g, '')));
-                const byteArray = new TextEncoder().encode(ccid_cmd.replace(/\s/g, ''));
-                console.log(byteArray);
-                const ccid_buf = byteArray.buffer;
-                console.log(ccid_buf);*/
+                
+                if(jscd.os == "Android")
+                {
+                                            // web bluetooth didn't provide mtu length command
+                    max_send_length = 27 - 7;   // assume Android will not do MTU at first
+                }
+                else
+                {
+                    max_send_length = 251 - 7;
+                }
+                
+                cmd_length = (output_data.length/2) + 9; //+9 is header and footer
+                
+                output_data = splitEveryN(output_data, ((max_send_length - 9)*2)); //split by max length
+                // console.log(jscd.os == "Windows");
+                // console.log(cmd_length);
+                // console.log(output_data);
+                // console.log(Math.ceil(cmd_length / max_send_length));
+
+                for(var i = 0; i < Math.ceil(cmd_length / max_send_length);i++)
+                {
+                  // console.log("frame "+i);
+                  // console.log(output_data[i]);
+                  
+                  output_data[i] = construct_ble_header(output_data[i], (cmd_length-9));
+                  output_data[i] = construct_ble_footer(output_data[i]);
+                  // console.log(typeof(output_data[i]));
+                  // console.log(fromHexString(output_data[i]).buffer);
+                  await write_cmd.writeValueWithoutResponse(fromHexString(output_data[i]).buffer,response = 'never');
+                  
+                  
+                }
+
+                  /*console.log(typeof(output_data));
+                  output_data = construct_ble_header(output_data);
+                  output_data = construct_ble_footer(output_data);
+                  write_cmd.writeValueWithoutResponse(fromHexString(output_data).buffer,response = 'never');
+                  console.log(output_data);
+                  console.log(fromHexString(output_data).buffer);*/
+
+                
+                
             }
-            catch{
+            catch(e){
                 alert("Please input command with space in between e.g. 80 84 00 00 08");
+                console.log(e.stack);
+                resetWriteCMD();
+                if(cmd_interval_id != null){
+                    clearInterval(cmd_interval_id);
+                    cmd_interval_id = null;
+                    document.getElementById("loopButton").innerHTML = "Loop command";
+                }
             }
                 
         }
@@ -436,8 +477,9 @@
             }
         }
     }
+
     
-    function construct_ble_header(cmd){
+    function construct_ble_header(cmd, cmd_length){
         var ble_header = "";
         ble_header += "55";
         if(1){ //slot
@@ -447,10 +489,8 @@
             ble_header += "01";
         }
         
-        var size_of_cmd = cmd.length/2;
-        console.log(size_of_cmd);
         for(var i=1;i>=0;i--){
-            ble_header += (((size_of_cmd) >> (8*i)) & 0xff).toString(16).padStart(2, '0').toUpperCase();
+            ble_header += (((cmd_length) >> (8*i)) & 0xff).toString(16).padStart(2, '0').toUpperCase();
             
         }
         ble_header += "00";//reader seq
@@ -465,6 +505,35 @@
         }
         return ble_header+cmd;
     }
+    // function construct_ble_header(cmd){
+    //     var ble_header = "";
+    //     ble_header += "55";
+    //     if(1){ //slot
+    //         ble_header += "00";
+    //     }
+    //     else{
+    //         ble_header += "01";
+    //     }
+        
+    //     var size_of_cmd = cmd.length/2;
+    //     console.log(size_of_cmd);
+    //     for(var i=1;i>=0;i--){
+    //         ble_header += (((size_of_cmd) >> (8*i)) & 0xff).toString(16).padStart(2, '0').toUpperCase();
+            
+    //     }
+    //     ble_header += "00";//reader seq
+        
+    //     ble_header += "00";//host seq
+        
+    //     if(1){ //enc??
+    //         ble_header += "00";
+    //     }
+    //     else{
+    //         ble_header += "01";
+    //     }
+    //     console.log(ble_header+cmd);
+    //     return ble_header+cmd;
+    // }
     var ccid_seq=0;
     function construct_CCID_Xblk(cmd){
         var ccid_header = "";
@@ -2261,5 +2330,222 @@
       0xFA57: "Interagon AS",
     };
     </script>
+  <script>
+    /**
+     * JavaScript Client Detection
+     * (C) viazenetti GmbH (Christian Ludwig)
+     */
+    (function (window) {
+        {
+            var unknown = '-';
+
+            // screen
+            var screenSize = '';
+            if (screen.width) {
+                width = (screen.width) ? screen.width : '';
+                height = (screen.height) ? screen.height : '';
+                screenSize += '' + width + " x " + height;
+            }
+
+            // browser
+            var nVer = navigator.appVersion;
+            var nAgt = navigator.userAgent;
+            var browser = navigator.appName;
+            var version = '' + parseFloat(nVer);
+            var nameOffset, verOffset, ix;
+
+            // Yandex Browser
+            if ((verOffset = nAgt.indexOf('YaBrowser')) != -1) {
+                browser = 'Yandex';
+                version = nAgt.substring(verOffset + 10);
+            }
+            // Samsung Browser
+            else if ((verOffset = nAgt.indexOf('SamsungBrowser')) != -1) {
+                browser = 'Samsung';
+                version = nAgt.substring(verOffset + 15);
+            }
+            // UC Browser
+            else if ((verOffset = nAgt.indexOf('UCBrowser')) != -1) {
+                browser = 'UC Browser';
+                version = nAgt.substring(verOffset + 10);
+            }
+            // Opera Next
+            else if ((verOffset = nAgt.indexOf('OPR')) != -1) {
+                browser = 'Opera';
+                version = nAgt.substring(verOffset + 4);
+            }
+            // Opera
+            else if ((verOffset = nAgt.indexOf('Opera')) != -1) {
+                browser = 'Opera';
+                version = nAgt.substring(verOffset + 6);
+                if ((verOffset = nAgt.indexOf('Version')) != -1) {
+                    version = nAgt.substring(verOffset + 8);
+                }
+            }
+            // Legacy Edge
+            else if ((verOffset = nAgt.indexOf('Edge')) != -1) {
+                browser = 'Microsoft Legacy Edge';
+                version = nAgt.substring(verOffset + 5);
+            } 
+            // Edge (Chromium)
+            else if ((verOffset = nAgt.indexOf('Edg')) != -1) {
+                browser = 'Microsoft Edge';
+                version = nAgt.substring(verOffset + 4);
+            }
+            // MSIE
+            else if ((verOffset = nAgt.indexOf('MSIE')) != -1) {
+                browser = 'Microsoft Internet Explorer';
+                version = nAgt.substring(verOffset + 5);
+            }
+            // Chrome
+            else if ((verOffset = nAgt.indexOf('Chrome')) != -1) {
+                browser = 'Chrome';
+                version = nAgt.substring(verOffset + 7);
+            }
+            // Safari
+            else if ((verOffset = nAgt.indexOf('Safari')) != -1) {
+                browser = 'Safari';
+                version = nAgt.substring(verOffset + 7);
+                if ((verOffset = nAgt.indexOf('Version')) != -1) {
+                    version = nAgt.substring(verOffset + 8);
+                }
+            }
+            // Firefox
+            else if ((verOffset = nAgt.indexOf('Firefox')) != -1) {
+                browser = 'Firefox';
+                version = nAgt.substring(verOffset + 8);
+            }
+            // MSIE 11+
+            else if (nAgt.indexOf('Trident/') != -1) {
+                browser = 'Microsoft Internet Explorer';
+                version = nAgt.substring(nAgt.indexOf('rv:') + 3);
+            }
+            // Other browsers
+            else if ((nameOffset = nAgt.lastIndexOf(' ') + 1) < (verOffset = nAgt.lastIndexOf('/'))) {
+                browser = nAgt.substring(nameOffset, verOffset);
+                version = nAgt.substring(verOffset + 1);
+                if (browser.toLowerCase() == browser.toUpperCase()) {
+                    browser = navigator.appName;
+                }
+            }
+            // trim the version string
+            if ((ix = version.indexOf(';')) != -1) version = version.substring(0, ix);
+            if ((ix = version.indexOf(' ')) != -1) version = version.substring(0, ix);
+            if ((ix = version.indexOf(')')) != -1) version = version.substring(0, ix);
+
+            majorVersion = parseInt('' + version, 10);
+            if (isNaN(majorVersion)) {
+                version = '' + parseFloat(nVer);
+                majorVersion = parseInt(nVer, 10);
+            }
+
+            // mobile version
+            var mobile = /Mobile|mini|Fennec|Android|iP(ad|od|hone)/.test(nVer);
+
+            // cookie
+            var cookieEnabled = (navigator.cookieEnabled) ? true : false;
+
+            if (typeof navigator.cookieEnabled == 'undefined' && !cookieEnabled) {
+                document.cookie = 'testcookie';
+                cookieEnabled = (document.cookie.indexOf('testcookie') != -1) ? true : false;
+            }
+
+            // system
+            var os = unknown;
+            var clientStrings = [
+                {s:'Windows 10', r:/(Windows 10.0|Windows NT 10.0)/},
+                {s:'Windows 8.1', r:/(Windows 8.1|Windows NT 6.3)/},
+                {s:'Windows 8', r:/(Windows 8|Windows NT 6.2)/},
+                {s:'Windows 7', r:/(Windows 7|Windows NT 6.1)/},
+                {s:'Windows Vista', r:/Windows NT 6.0/},
+                {s:'Windows Server 2003', r:/Windows NT 5.2/},
+                {s:'Windows XP', r:/(Windows NT 5.1|Windows XP)/},
+                {s:'Windows 2000', r:/(Windows NT 5.0|Windows 2000)/},
+                {s:'Windows ME', r:/(Win 9x 4.90|Windows ME)/},
+                {s:'Windows 98', r:/(Windows 98|Win98)/},
+                {s:'Windows 95', r:/(Windows 95|Win95|Windows_95)/},
+                {s:'Windows NT 4.0', r:/(Windows NT 4.0|WinNT4.0|WinNT|Windows NT)/},
+                {s:'Windows CE', r:/Windows CE/},
+                {s:'Windows 3.11', r:/Win16/},
+                {s:'Android', r:/Android/},
+                {s:'Open BSD', r:/OpenBSD/},
+                {s:'Sun OS', r:/SunOS/},
+                {s:'Chrome OS', r:/CrOS/},
+                {s:'Linux', r:/(Linux|X11(?!.*CrOS))/},
+                {s:'iOS', r:/(iPhone|iPad|iPod)/},
+                {s:'Mac OS X', r:/Mac OS X/},
+                {s:'Mac OS', r:/(Mac OS|MacPPC|MacIntel|Mac_PowerPC|Macintosh)/},
+                {s:'QNX', r:/QNX/},
+                {s:'UNIX', r:/UNIX/},
+                {s:'BeOS', r:/BeOS/},
+                {s:'OS/2', r:/OS\/2/},
+                {s:'Search Bot', r:/(nuhk|Googlebot|Yammybot|Openbot|Slurp|MSNBot|Ask Jeeves\/Teoma|ia_archiver)/}
+            ];
+            for (var id in clientStrings) {
+                var cs = clientStrings[id];
+                if (cs.r.test(nAgt)) {
+                    os = cs.s;
+                    break;
+                }
+            }
+
+            var osVersion = unknown;
+
+            if (/Windows/.test(os)) {
+                osVersion = /Windows (.*)/.exec(os)[1];
+                os = 'Windows';
+            }
+
+            switch (os) {
+                case 'Mac OS':
+                case 'Mac OS X':
+                case 'Android':
+                    osVersion = /(?:Android|Mac OS|Mac OS X|MacPPC|MacIntel|Mac_PowerPC|Macintosh) ([\.\_\d]+)/.exec(nAgt)[1];
+                    break;
+
+                case 'iOS':
+                    osVersion = /OS (\d+)_(\d+)_?(\d+)?/.exec(nVer);
+                    osVersion = osVersion[1] + '.' + osVersion[2] + '.' + (osVersion[3] | 0);
+                    break;
+            }
+            
+            // flash (you'll need to include swfobject)
+            /* script src="//ajax.googleapis.com/ajax/libs/swfobject/2.2/swfobject.js" */
+            var flashVersion = 'no check';
+            if (typeof swfobject != 'undefined') {
+                var fv = swfobject.getFlashPlayerVersion();
+                if (fv.major > 0) {
+                    flashVersion = fv.major + '.' + fv.minor + ' r' + fv.release;
+                }
+                else  {
+                    flashVersion = unknown;
+                }
+            }
+        }
+
+        window.jscd = {
+            screen: screenSize,
+            browser: browser,
+            browserVersion: version,
+            browserMajorVersion: majorVersion,
+            mobile: mobile,
+            os: os,
+            osVersion: osVersion,
+            cookies: cookieEnabled,
+            flashVersion: flashVersion
+        };
+        }(this));
+
+    /*alert(
+        'OS: ' + jscd.os +' '+ jscd.osVersion + '\n' +
+        'Browser: ' + jscd.browser +' '+ jscd.browserMajorVersion +
+          ' (' + jscd.browserVersion + ')\n' + 
+        'Mobile: ' + jscd.mobile + '\n' +
+        'Flash: ' + jscd.flashVersion + '\n' +
+        'Cookies: ' + jscd.cookies + '\n' +
+        'Screen Size: ' + jscd.screen + '\n\n' +
+        'Full User Agent: ' + navigator.userAgent
+    );*/
+  </script>
 </body>
 </html>
