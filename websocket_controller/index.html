@@ -18,53 +18,53 @@
         }
         .container {
             background-color: #e0e0e0;
-            padding: 8px; /* Reduced padding for iPhone SE */
+            padding: 8px;
             border: 1px solid #ccc;
             border-radius: 5px;
-            width: 95vw; /* Slightly wider for iPhone SE landscape */
+            width: 95vw;
             max-width: 600px;
-            height: 90vh; /* Fit iPhone SE landscape height */
+            height: 90vh;
             max-height: 600px;
             display: flex;
             flex-direction: column;
             box-sizing: border-box;
-            transition: all 0.3s ease; /* Smooth transition for resizing */
+            transition: all 0.3s ease;
         }
         .websocket-section {
             width: 100%;
             text-align: center;
-            margin-bottom: 10px; /* Reduced space for iPhone SE */
+            margin-bottom: 10px;
         }
         .panels {
             display: flex;
             width: 100%;
-            flex-wrap: wrap; /* Allow wrapping for smaller screens */
-            height: 100%; /* Fill the container height */
+            flex-wrap: wrap;
+            height: 100%;
             box-sizing: border-box;
         }
         .left-panel, .right-panel {
             flex: 1;
-            padding: 4px; /* Reduced padding for iPhone SE */
+            padding: 4px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            min-width: 45%; /* Fit iPhone SE landscape */
+            min-width: 45%;
             box-sizing: border-box;
-            transition: all 0.3s ease; /* Smooth transition for resizing */
+            transition: all 0.3s ease;
         }
         .button {
-            width: 45px; /* Slightly smaller for iPhone SE */
-            height: 22px; /* Slightly smaller for iPhone SE */
+            width: 45px;
+            height: 22px;
             margin: calc(0.5vh + 1px);
             background-color: #ccc;
             border: none;
             border-radius: 3px;
             cursor: pointer;
-            font-size: 12px; /* Smaller font for iPhone SE */
+            font-size: 12px;
             display: inline-block;
-            outline: none; /* Remove default focus outline */
-            transition: all 0.3s ease; /* Smooth transition for resizing */
+            outline: none;
+            transition: all 0.3s ease;
         }
         .button:hover {
             background-color: #bbb;
@@ -73,40 +73,44 @@
             background-color: #007bff;
             color: white;
         }
+        .button:disabled {
+            background-color: #999;
+            cursor: not-allowed;
+        }
         .control-group {
-            margin: calc(0.8vh + 2px) 0; /* Dynamic margin for iPhone SE */
+            margin: calc(0.8vh + 2px) 0;
             text-align: center;
-            transition: all 0.3s ease; /* Smooth transition for resizing */
+            transition: all 0.3s ease;
         }
         .directional-controls {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 20px; /* Reduced gap for iPhone SE */
-            transition: all 0.3s ease; /* Smooth transition for resizing */
+            gap: 20px;
+            transition: all 0.3s ease;
         }
         .directional-row {
             display: flex;
             justify-content: center;
-            gap: 20px; /* Reduced gap for iPhone SE */
-            transition: all 0.3s ease; /* Smooth transition for resizing */
+            gap: 20px;
+            transition: all 0.3s ease;
         }
         .rotation-buttons {
             display: flex;
             justify-content: center;
-            gap: 6px; /* Reduced gap for iPhone SE */
-            transition: all 0.3s ease; /* Smooth transition for resizing */
+            gap: 6px;
+            transition: all 0.3s ease;
         }
         .servo-dial {
-            width: 70px; /* Smaller for iPhone SE */
-            height: 70px; /* Smaller for iPhone SE */
+            width: 70px;
+            height: 70px;
             border: 2px solid #ccc;
             border-radius: 50%;
             position: relative;
             background: #fff;
             cursor: pointer;
             overflow: hidden;
-            transition: all 0.3s ease; /* Smooth transition for resizing */
+            transition: all 0.3s ease;
         }
         .servo-dial-canvas {
             width: 100%;
@@ -115,67 +119,135 @@
         }
         .servo-dial-knob {
             position: absolute;
-            width: 7px; /* Smaller for iPhone SE */
-            height: 7px; /* Smaller for iPhone SE */
+            width: 7px;
+            height: 7px;
             background: #007bff;
             border-radius: 50%;
-            top: calc(0.5vw + 2px); /* Adjusted for dynamic size */
+            top: calc(0.5vw + 2px);
             left: 50%;
             transform: translateX(-50%) rotate(0deg);
             z-index: 2;
-            transition: all 0.1s ease; /* Smooth transition for resizing */
+            transition: all 0.1s ease;
         }
         .servo-dial-value {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 10px; /* Smaller for iPhone SE */
+            font-size: 10px;
             color: #333;
             z-index: 3;
-            transition: all 0.3s ease; /* Smooth transition for resizing */
+            transition: all 0.3s ease;
         }
         .label {
-            font-size: 10px; /* Smaller for iPhone SE */
+            font-size: 10px;
             color: #333;
             display: block;
-            margin-bottom: calc(0.5vh + 2px); /* Dynamic margin */
-            transition: all 0.3s ease; /* Smooth transition for resizing */
+            margin-bottom: calc(0.5vh + 2px);
+            transition: all 0.3s ease;
         }
         .horizontal-buttons {
             display: flex;
             justify-content: center;
-            gap: 6px; /* Reduced gap for iPhone SE */
-            transition: all 0.3s ease; /* Smooth transition for resizing */
+            gap: 6px;
+            transition: all 0.3s ease;
         }
         .websocket-input {
-            width: 60%; /* Reduced for iPhone SE */
-            margin-bottom: calc(0.5vh + 2px); /* Dynamic margin */
-            padding: calc(0.5vw + 2px); /* Dynamic padding */
-            font-size: 10px; /* Smaller for iPhone SE */
+            width: 60%;
+            margin-bottom: calc(0.5vh + 2px);
+            padding: calc(0.5vw + 2px);
+            font-size: 10px;
             border: 1px solid #ccc;
             border-radius: 3px;
-            transition: all 0.3s ease; /* Smooth transition for resizing */
+            transition: all 0.3s ease;
         }
         .connection-status {
             margin-top: calc(0.5vh + 2px);
-            font-size: 8px; /* Smaller for iPhone SE */
+            font-size: 8px;
             color: #333;
-            transition: all 0.3s ease; /* Smooth transition for resizing */
+            transition: all 0.3s ease;
+        }
+        .speed-slider {
+            width: 100%;
+            margin-top: 5px;
+            height: 20px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: #ccc;
+            border-radius: 10px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        .speed-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 15px;
+            height: 15px;
+            background: #007bff;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .speed-slider::-moz-range-thumb {
+            width: 15px;
+            height: 15px;
+            background: #007bff;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .speed-label {
+            font-size: 10px;
+            color: #333;
+            margin-top: 5px;
+            transition: all 0.3s ease;
+        }
+        .joystick {
+            width: 100px;
+            height: 100px;
+            position: relative;
+            background: #e0e0e0;
+            border-radius: 50%;
+            overflow: hidden;
+            touch-action: none;
+            transition: all 0.3s ease;
+        }
+        .joystick-base {
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, #ccc 0%, #aaa 70%);
+            border-radius: 50%;
+        }
+        .joystick-stick {
+            width: 30px;
+            height: 30px;
+            background: #007bff;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.1s ease;
+        }
+        .control-mode-toggle {
+            margin: calc(0.5vh + 2px) 0;
+            font-size: 10px;
+        }
+        .hidden {
+            display: none;
         }
 
-        /* Media query for iPhone SE landscape (667x375 CSS pixels) */
+        /* Media query for iPhone SE landscape */
         @media (orientation: landscape) and (max-width: 667px) and (max-height: 375px) {
             .container {
                 width: 95vw;
                 height: 90vh;
-                padding: 6px; /* Further reduced for iPhone SE */
+                padding: 6px;
             }
             .panels {
-                flex-direction: row; /* Ensure side-by-side in landscape */
+                flex-direction: row;
             }
             .left-panel, .right-panel {
-                padding: 3px; /* Further reduced for iPhone SE */
+                padding: 3px;
                 min-width: 45%;
                 flex-grow: 1;
             }
@@ -194,26 +266,40 @@
                 height: 7px;
                 top: calc(0.5vw + 2px);
             }
-            .label, .servo-dial-value, .websocket-input {
+            .label, .servo-dial-value, .websocket-input, .speed-label {
                 font-size: 10px;
             }
             .connection-status {
                 font-size: 8px;
             }
             .directional-controls {
-                gap: 18px; /* Further reduced for iPhone SE */
+                gap: 18px;
             }
             .directional-row {
-                gap: 18px; /* Further reduced for iPhone SE */
+                gap: 18px;
             }
             .rotation-buttons, .horizontal-buttons {
-                gap: 5px; /* Further reduced for iPhone SE */
+                gap: 5px;
+            }
+            .speed-slider {
+                height: 18px;
+            }
+            .speed-slider::-webkit-slider-thumb, .speed-slider::-moz-range-thumb {
+                width: 12px;
+                height: 12px;
+            }
+            .joystick {
+                width: 90px;
+                height: 90px;
+            }
+            .joystick-stick {
+                width: 25px;
+                height: 25px;
             }
         }
 
-        /* Ensure touch-friendly elements for mobile */
-        .button, .servo-dial {
-            touch-action: manipulation; /* Improve touch responsiveness */
+        .button, .servo-dial, .speed-slider, .joystick {
+            touch-action: manipulation;
         }
     </style>
 </head>
@@ -227,12 +313,24 @@
         <div class="panels">
             <div class="left-panel">
                 <div class="control-group">
+                    <span class="label">Speed</span>
+                    <input type="range" class="speed-slider" id="speedSlider" min="0" max="100" value="0">
+                    <span class="speed-label" id="speedValue">0%</span>
+                </div>
+                <div class="control-group">
                     <div class="rotation-buttons">
-                        <button class="button" id="rotateCCW">↺</button> <!-- No 'selected' class -->
+                        <button class="button" id="rotateCCW">↺</button>
                         <button class="button" id="rotateCW">↻</button>
                     </div>
                 </div>
-                <div class="control-group directional-controls">
+                <div class="control-group control-mode-toggle">
+                    <label for="controlMode">Control Mode: </label>
+                    <select id="controlMode">
+                        <option value="arrows" selected>Arrow Buttons</option>
+                        <option value="joystick">Joystick</option>
+                    </select>
+                </div>
+                <div class="control-group directional-controls" id="arrowControls">
                     <div class="directional-row">
                         <button class="button" id="up">↑</button>
                     </div>
@@ -242,6 +340,13 @@
                     </div>
                     <div class="directional-row">
                         <button class="button" id="down">↓</button>
+                    </div>
+                </div>
+                <div class="control-group hidden" id="joystickControls">
+                    <span class="label">Joystick</span>
+                    <div class="joystick" id="joystick">
+                        <div class="joystick-base"></div>
+                        <div class="joystick-stick" id="joystickStick"></div>
                     </div>
                 </div>
             </div>
@@ -254,7 +359,7 @@
                     </div>
                 </div>
                 <div class="control-group">
-                    <span class="label">stepper motor</span>
+                    <span class="label">Stepper motor</span>
                     <div class="horizontal-buttons">
                         <button class="button" id="stepperCW">CW</button>
                         <button class="button" id="stepperCCW">CCW</button>
@@ -268,7 +373,7 @@
                     </div>
                 </div>
                 <div class="control-group">
-                    <span id="textLabel" class="label">TextLabel: 0</span>
+                    <span id="servoAngleLabel" class="label">Servo angle: 0</span>
                 </div>
                 <div class="control-group">
                     <span class="label">Servo</span>
@@ -286,23 +391,42 @@
         // WebSocket variables
         let ws;
         let commandInterval;
-        let lastValidAngle = 135; // Track the last valid angle to prevent resetting
-        let activeTouchId = null; // Track the active touch identifier for multi-touch
+        let lastValidAngle = 135;
+        let activeTouchId = null;
 
         // Servo dial variables
         const canvas = document.querySelector('.servo-dial-canvas');
         const ctx = canvas.getContext('2d');
         const knob = document.getElementById('knob');
         const dialValueDisplay = document.getElementById('dialValue');
-        const textLabel = document.getElementById('textLabel');
-        let angle = 135; // Start at 135 degrees (bottom-right, after 90° counterclockwise shift from 225°)
-        const radius = 31; // Adjusted radius for smaller 70px dial (inside the 35px margin from edges)
+        const servoAngleLabel = document.getElementById('servoAngleLabel');
+        let angle = 135;
+        const radius = 31;
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
         let isDragging = false;
-        const START_ANGLE = 135; // New starting angle in degrees (bottom-right, after 90° counterclockwise)
-        const END_ANGLE = 45; // New ending angle in degrees (top-right, after 90° counterclockwise)
-        const ANGLE_RANGE = 270; // 270 degrees arc (135° to 45°, crossing the top)
+        const START_ANGLE = 135;
+        const END_ANGLE = 45;
+        const ANGLE_RANGE = 270;
+
+        // Speed slider variables
+        const speedSlider = document.getElementById('speedSlider');
+        const speedValueDisplay = document.getElementById('speedValue');
+
+        // Joystick variables
+        const joystick = document.getElementById('joystick');
+        const joystickStick = document.getElementById('joystickStick');
+        let joystickCenterX, joystickCenterY, joystickRadius;
+        let isJoystickDragging = false;
+
+        // Control mode elements
+        const controlModeSelect = document.getElementById('controlMode');
+        const arrowControls = document.getElementById('arrowControls');
+        const joystickControls = document.getElementById('joystickControls');
+
+        // Drill button references
+        const drillStartButton = document.getElementById('drillStart');
+        const drillStopButton = document.getElementById('drillStop');
 
         // Draw the dial background and gradient
         function drawDial(value) {
@@ -311,37 +435,32 @@
             const sweepAngle = (percentage * ANGLE_RANGE * Math.PI) / 180;
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Draw background circle
             ctx.beginPath();
-            ctx.arc(centerX, centerY, 33, 0, Math.PI * 2); // Adjusted for 70px canvas
+            ctx.arc(centerX, centerY, 33, 0, Math.PI * 2);
             ctx.fillStyle = '#fff';
             ctx.fill();
             ctx.strokeStyle = '#ccc';
             ctx.lineWidth = 2;
             ctx.stroke();
 
-            // Draw conic gradient (filled portion) across the 270-degree arc
             ctx.beginPath();
             ctx.moveTo(centerX, centerY);
-            ctx.arc(centerX, centerY, 33, startRad, startRad + sweepAngle, false); // Adjusted for 70px canvas
+            ctx.arc(centerX, centerY, 33, startRad, startRad + sweepAngle, false);
             ctx.fillStyle = '#007bff';
             ctx.fill();
         }
 
         // Update knob position and value
         function updateKnob(angleDegrees) {
-            // Normalize angle to stay within 135° to 405° (wrap to 45° for the arc)
             let normalizedAngle = angleDegrees;
             while (normalizedAngle < START_ANGLE) normalizedAngle += 360;
             while (normalizedAngle > START_ANGLE + ANGLE_RANGE) normalizedAngle -= 360;
 
-            // Clamp to the 270-degree arc (135° to 405°, wrapping to 45°)
             if (normalizedAngle < START_ANGLE) normalizedAngle = START_ANGLE;
             if (normalizedAngle > START_ANGLE + ANGLE_RANGE) normalizedAngle = START_ANGLE + (normalizedAngle - (START_ANGLE + ANGLE_RANGE));
 
-            const value = Math.round(((normalizedAngle - START_ANGLE) / ANGLE_RANGE) * 120); // Map 0-270 degrees to 0-120
-            const rad = (normalizedAngle * Math.PI) / 180; // Use direct radians for positioning
+            const value = Math.round(((normalizedAngle - START_ANGLE) / ANGLE_RANGE) * 120);
+            const rad = (normalizedAngle * Math.PI) / 180;
 
             const knobX = centerX + radius * Math.cos(rad);
             const knobY = centerY + radius * Math.sin(rad);
@@ -351,21 +470,22 @@
             knob.style.left = `${knobX}px`;
             drawDial(value);
             dialValueDisplay.textContent = value;
-            textLabel.textContent = `TextLabel: ${value}`;
-            sendWebSocketMessageImmediately({ command: "servo", value: value }); // Send servo value in JSON format only when updated
-            console.log('Servo value updated and sent:', value); // Debug log for verification
-            lastValidAngle = normalizedAngle; // Update last valid angle
+            servoAngleLabel.textContent = `Servo angle: ${value}`;
+            sendWebSocketMessageImmediately({ command: "servo", value: value });
+            lastValidAngle = normalizedAngle;
         }
 
-        // Servo Dial Event Listeners for Multi-Touch and Mouse
+        // Update speed slider value and send via WebSocket
+        function updateSpeed(value) {
+            speedValueDisplay.textContent = `${value}%`;
+            sendWebSocketMessageImmediately({ command: "speed", value: parseInt(value, 10) });
+        }
+
+        // Servo Dial Event Listeners
         function setupServoDialListeners() {
-            // Touch events for multi-touch
             canvas.addEventListener('touchstart', handleTouchStart);
             canvas.addEventListener('touchmove', handleTouchMove);
             canvas.addEventListener('touchend', handleTouchEnd);
-            canvas.addEventListener('touchcancel', handleTouchEnd);
-
-            // Mouse events for desktop compatibility
             canvas.addEventListener('mousedown', handleMouseDown);
             document.addEventListener('mousemove', handleMouseMove);
             document.addEventListener('mouseup', handleMouseUp);
@@ -390,7 +510,6 @@
         function handleTouchStart(e) {
             e.preventDefault();
             if (e.touches.length > 0) {
-                // Prioritize the first touch for consistency
                 activeTouchId = e.touches[0].identifier;
                 isDragging = true;
                 updateAngle({ type: 'touch', clientX: e.touches[0].clientX, clientY: e.touches[0].clientY });
@@ -400,7 +519,6 @@
         function handleTouchMove(e) {
             e.preventDefault();
             if (isDragging && e.touches.length > 0) {
-                // Find the touch with the activeTouchId or use the first touch if not found
                 let touch = Array.from(e.touches).find(t => t.identifier === activeTouchId) || e.touches[0];
                 updateAngle({ type: 'touch', clientX: touch.clientX, clientY: touch.clientY });
             }
@@ -410,7 +528,7 @@
             e.preventDefault();
             if (isDragging) {
                 isDragging = false;
-                activeTouchId = null; // Reset active touch
+                activeTouchId = null;
             }
         }
 
@@ -418,7 +536,6 @@
             let clientX, clientY;
             let isValidPosition = true;
 
-            // Determine if the event is a touch or mouse event
             if (e.type === 'touch') {
                 clientX = e.clientX - canvas.getBoundingClientRect().left;
                 clientY = e.clientY - canvas.getBoundingClientRect().top;
@@ -427,7 +544,6 @@
                 clientY = e.clientY - canvas.getBoundingClientRect().top;
             }
 
-            // Check if the touch/mouse position is within the canvas bounds
             const canvasRect = canvas.getBoundingClientRect();
             if (clientX < 0 || clientX > canvasRect.width || clientY < 0 || clientY > canvasRect.height) {
                 isValidPosition = false;
@@ -438,38 +554,127 @@
 
             let angleDegrees;
             if (isValidPosition) {
-                angleDegrees = (Math.atan2(dy, dx) * 180 / Math.PI) + 180; // Convert to degrees, adjust to start at right
-
-                // Project the touch/mouse position onto the 270-degree arc (135° to 45°)
+                angleDegrees = (Math.atan2(dy, dx) * 180 / Math.PI) + 180;
                 let distance = Math.sqrt(dx * dx + dy * dy);
                 if (distance > radius) {
-                    // If outside the radius, project back to the circle
                     const angleRad = Math.atan2(dy, dx);
                     clientX = centerX + radius * Math.cos(angleRad);
                     clientY = centerY + radius * Math.sin(angleRad);
                 }
 
-                // Recalculate angle after projection
                 const newDx = clientX - centerX;
                 const newDy = clientY - centerY;
-                angleDegrees = (Math.atan2(newDy, newDx) * 180 / Math.PI) + 180; // Use +180° to align correctly
-
-                // Offset the angle by 180 degrees to make the knob 180° off from the touch/mouse
+                angleDegrees = (Math.atan2(newDy, newDx) * 180 / Math.PI) + 180;
                 angleDegrees = (angleDegrees + 180) % 360;
 
-                // Normalize angle to the 135° to 405° range (wrap to 45°)
                 let normalizedAngle = angleDegrees;
                 while (normalizedAngle < START_ANGLE) normalizedAngle += 360;
                 while (normalizedAngle > START_ANGLE + ANGLE_RANGE) normalizedAngle -= 360;
 
-                // Clamp to the 270-degree arc (135° to 405°, wrapping to 45°)
                 if (normalizedAngle < START_ANGLE) normalizedAngle = START_ANGLE;
                 if (normalizedAngle > START_ANGLE + ANGLE_RANGE) normalizedAngle = START_ANGLE + (normalizedAngle - (START_ANGLE + ANGLE_RANGE));
 
                 updateKnob(normalizedAngle);
             } else {
-                // If position is outside canvas, retain the last valid angle and value
                 updateKnob(lastValidAngle);
+            }
+        }
+
+        // Joystick functions
+        function setupJoystickListeners() {
+            joystick.addEventListener('mousedown', handleJoystickMouseDown);
+            document.addEventListener('mousemove', handleJoystickMouseMove);
+            document.addEventListener('mouseup', handleJoystickMouseUp);
+            joystick.addEventListener('touchstart', handleJoystickTouchStart);
+            joystick.addEventListener('touchmove', handleJoystickTouchMove);
+            joystick.addEventListener('touchend', handleJoystickTouchEnd);
+
+            updateJoystickDimensions();
+        }
+
+        function updateJoystickDimensions() {
+            const rect = joystick.getBoundingClientRect();
+            joystickCenterX = rect.width / 2;
+            joystickCenterY = rect.height / 2;
+            joystickRadius = rect.width / 2 - joystickStick.offsetWidth / 2;
+            resetJoystick();
+        }
+
+        function handleJoystickTouchStart(e) {
+            e.preventDefault();
+            if (controlModeSelect.value !== 'joystick' || e.touches.length === 0) return;
+            activeTouchId = e.touches[0].identifier;
+            isJoystickDragging = true;
+            updateJoystickPosition(e.touches[0]);
+        }
+
+        function handleJoystickTouchMove(e) {
+            e.preventDefault();
+            if (!isJoystickDragging || controlModeSelect.value !== 'joystick') return;
+            let touch = Array.from(e.touches).find(t => t.identifier === activeTouchId) || e.touches[0];
+            updateJoystickPosition(touch);
+        }
+
+        function handleJoystickTouchEnd(e) {
+            e.preventDefault();
+            if (!isJoystickDragging || controlModeSelect.value !== 'joystick') return;
+            isJoystickDragging = false;
+            activeTouchId = null;
+            resetJoystick();
+        }
+
+        function handleJoystickMouseDown(e) {
+            e.preventDefault();
+            if (controlModeSelect.value !== 'joystick') return;
+            isJoystickDragging = true;
+            updateJoystickPosition(e);
+        }
+
+        function handleJoystickMouseMove(e) {
+            if (!isJoystickDragging || controlModeSelect.value !== 'joystick') return;
+            e.preventDefault();
+            updateJoystickPosition(e);
+        }
+
+        function handleJoystickMouseUp(e) {
+            e.preventDefault();
+            if (!isJoystickDragging || controlModeSelect.value !== 'joystick') return;
+            isJoystickDragging = false;
+            resetJoystick();
+        }
+
+        function updateJoystickPosition(e) {
+            if (!isJoystickDragging) return;
+
+            const rect = joystick.getBoundingClientRect();
+            let clientX = e.type === 'touch' ? e.clientX - rect.left : e.clientX - rect.left;
+            let clientY = e.type === 'touch' ? e.clientY - rect.top : e.clientY - rect.top;
+
+            let dx = clientX - joystickCenterX;
+            let dy = clientY - joystickCenterY;
+            let distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance > joystickRadius) {
+                const angle = Math.atan2(dy, dx);
+                dx = joystickRadius * Math.cos(angle);
+                dy = joystickRadius * Math.sin(angle);
+            }
+
+            joystickStick.style.left = `${joystickCenterX + dx}px`;
+            joystickStick.style.top = `${joystickCenterY + dy}px`;
+            joystickStick.style.display = 'block';
+
+            const xValue = Math.round((dx / joystickRadius) * 100);
+            const yValue = Math.round((dy / joystickRadius) * 100);
+            sendWebSocketMessageImmediately({ command: "joystick", x: xValue, y: yValue });
+        }
+
+        function resetJoystick() {
+            joystickStick.style.left = `${joystickCenterX}px`;
+            joystickStick.style.top = `${joystickCenterY}px`;
+            joystickStick.style.display = 'block';
+            if (controlModeSelect.value === 'joystick') {
+                sendWebSocketMessageImmediately({ command: "joystick", x: 0, y: 0 });
             }
         }
 
@@ -487,22 +692,72 @@
         function handleButtonPress(e) {
             e.preventDefault();
             const button = e.target;
-            const buttons = document.querySelectorAll('.button');
-            buttons.forEach(btn => btn.classList.remove('selected'));
-            button.classList.add('selected');
-            sendWebSocketMessageImmediately({ command: button.id });
+            if (button.id === 'drillStart') {
+                button.classList.add('selected');
+                button.disabled = true; // Disable start button
+                sendWebSocketMessageImmediately({ command: button.id });
+            } else if (controlModeSelect.value === 'arrows' && ['up', 'down', 'left', 'right'].includes(button.id)) {
+                button.classList.add('selected');
+                sendWebSocketMessageImmediately({ command: button.id });
+            } else if (controlModeSelect.value === 'joystick' && ['up', 'down', 'left', 'right'].includes(button.id)) {
+                return; // Ignore directional buttons in joystick mode
+            } else {
+                button.classList.add('selected');
+                sendWebSocketMessageImmediately({ command: button.id });
+            }
         }
 
         function handleButtonRelease(e) {
             e.preventDefault();
             const button = e.target;
-            button.classList.remove('selected');
-            sendWebSocketMessageImmediately({ command: `${button.id}:off` });
+            if (button.id === 'drillStop') {
+                button.classList.remove('selected');
+                drillStartButton.disabled = false; // Re-enable start button
+                drillStartButton.classList.remove('selected');
+                sendWebSocketMessageImmediately({ command: 'drillStop' });
+            } else if (button.id === 'drillStart') {
+                // No action on release for drillStart, as it's a toggle
+            } else if (controlModeSelect.value === 'arrows' && ['up', 'down', 'left', 'right'].includes(button.id)) {
+                button.classList.remove('selected');
+                sendWebSocketMessageImmediately({ command: `${button.id}:off` }); // Use :off for arrows
+            } else if (controlModeSelect.value === 'joystick' && ['up', 'down', 'left', 'right'].includes(button.id)) {
+                return; // Ignore directional buttons in joystick mode
+            } else {
+                button.classList.remove('selected');
+                sendWebSocketMessageImmediately({ command: `${button.id}:stop` }); // Use :stop for others
+            }
+        }
+
+        // Speed Slider Event Listeners
+        function setupSpeedSliderListeners() {
+            speedSlider.addEventListener('input', () => updateSpeed(speedSlider.value));
+            speedSlider.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                updateSpeed(speedSlider.value);
+            });
         }
 
         // WebSocket Event Listeners
         function setupWebSocketListeners() {
             document.getElementById('connectButton').addEventListener('click', connectWebSocket);
+        }
+
+        // Control Mode Toggle
+        function setupControlModeToggle() {
+            controlModeSelect.addEventListener('change', () => {
+                if (controlModeSelect.value === 'arrows') {
+                    arrowControls.classList.remove('hidden');
+                    joystickControls.classList.add('hidden');
+                    if (isJoystickDragging) {
+                        isJoystickDragging = false;
+                        resetJoystick();
+                    }
+                } else {
+                    arrowControls.classList.add('hidden');
+                    joystickControls.classList.remove('hidden');
+                    updateJoystickDimensions();
+                }
+            });
         }
 
         // WebSocket functions
@@ -521,12 +776,12 @@
             ws.onopen = () => {
                 document.getElementById('connectionStatus').textContent = 'Connected';
                 document.getElementById('connectionStatus').style.color = 'green';
-                startSendingCommands(); // Start sending button commands continuously
+                startSendingCommands();
             };
             ws.onclose = () => {
                 document.getElementById('connectionStatus').textContent = 'Not Connected';
                 document.getElementById('connectionStatus').style.color = '#333';
-                clearInterval(commandInterval); // Stop sending commands
+                clearInterval(commandInterval);
             };
             ws.onerror = (error) => {
                 console.error('WebSocket Error:', error);
@@ -534,44 +789,34 @@
                 document.getElementById('connectionStatus').style.color = 'red';
             };
             ws.onmessage = (event) => {
-                console.log('Message from server:', event.data); // Log messages from the server for debugging
+                console.log('Message from server:', event.data);
             };
         }
 
         function startSendingCommands() {
             if (commandInterval) clearInterval(commandInterval);
-            commandInterval = setInterval(sendCurrentCommands, 100); // Send button commands every 100ms
+            commandInterval = setInterval(sendCurrentCommands, 100);
         }
 
         function sendCurrentCommands() {
             if (!ws || ws.readyState !== WebSocket.OPEN) return;
 
-            // Collect current states of all buttons (no servo value here)
             const commands = [];
-
-            // Check directional buttons
-            if (document.getElementById('up').classList.contains('selected')) commands.push({ command: 'up' });
-            if (document.getElementById('down').classList.contains('selected')) commands.push({ command: 'down' });
-            if (document.getElementById('left').classList.contains('selected')) commands.push({ command: 'left' });
-            if (document.getElementById('right').classList.contains('selected')) commands.push({ command: 'right' });
-
-            // Check rotation buttons
             if (document.getElementById('rotateCCW').classList.contains('selected')) commands.push({ command: 'rotateCCW' });
             if (document.getElementById('rotateCW').classList.contains('selected')) commands.push({ command: 'rotateCW' });
-
-            // Check linear actuator buttons
             if (document.getElementById('linearUp').classList.contains('selected')) commands.push({ command: 'linearUp' });
             if (document.getElementById('linearDown').classList.contains('selected')) commands.push({ command: 'linearDown' });
-
-            // Check stepper motor buttons
             if (document.getElementById('stepperCW').classList.contains('selected')) commands.push({ command: 'stepperCW' });
             if (document.getElementById('stepperCCW').classList.contains('selected')) commands.push({ command: 'stepperCCW' });
+            if (drillStartButton.classList.contains('selected')) commands.push({ command: 'drillStart' });
 
-            // Check drill buttons
-            if (document.getElementById('drillStart').classList.contains('selected')) commands.push({ command: 'drillStart' });
-            if (document.getElementById('drillStop').classList.contains('selected')) commands.push({ command: 'drillStop' });
+            if (controlModeSelect.value === 'arrows') {
+                if (document.getElementById('up').classList.contains('selected')) commands.push({ command: 'up' });
+                if (document.getElementById('down').classList.contains('selected')) commands.push({ command: 'down' });
+                if (document.getElementById('left').classList.contains('selected')) commands.push({ command: 'left' });
+                if (document.getElementById('right').classList.contains('selected')) commands.push({ command: 'right' });
+            }
 
-            // Send commands as a single JSON message (only button commands, no servo)
             if (commands.length > 0) {
                 ws.send(JSON.stringify({ commands: commands }));
             }
@@ -579,10 +824,7 @@
 
         function sendWebSocketMessageImmediately(message) {
             if (ws && ws.readyState === WebSocket.OPEN) {
-                console.log('Sending WebSocket message:', JSON.stringify(message)); // Debug log for JSON
                 ws.send(JSON.stringify(message));
-            } else {
-                console.warn('WebSocket not connected, message not sent:', JSON.stringify(message));
             }
         }
 
@@ -590,57 +832,26 @@
         function init() {
             drawDial(0);
             updateKnob(START_ANGLE);
-            // Ensure no button is focused or selected on initialization
             const buttons = document.querySelectorAll('.button');
             buttons.forEach(button => button.classList.remove('selected'));
             setupServoDialListeners();
             setupButtonListeners();
+            setupSpeedSliderListeners();
             setupWebSocketListeners();
+            setupJoystickListeners();
+            setupControlModeToggle();
+            arrowControls.classList.remove('hidden');
+            joystickControls.classList.add('hidden');
+            drillStartButton.disabled = false; // Ensure start button is enabled initially
         }
 
-        // Run initialization when the DOM is loaded
         document.addEventListener('DOMContentLoaded', init);
 
-        // Handle window resize to update element sizes (optional for iPhone SE optimization)
+        // Handle window resize
         window.addEventListener('resize', () => {
-            const container = document.querySelector('.container');
-            const buttons = document.querySelectorAll('.button');
-            const servoDial = document.querySelector('.servo-dial');
-            const servoKnob = document.querySelector('.servo-dial-knob');
-            const labels = document.querySelectorAll('.label, .servo-dial-value');
-            const websocketInput = document.querySelector('.websocket-input');
-            const connectionStatus = document.querySelector('.connection-status');
-
-            // Update button sizes dynamically (fixed for iPhone SE)
-            buttons.forEach(button => {
-                button.style.width = `45px`;
-                button.style.height = `22px`;
-                button.style.fontSize = `12px`;
-                button.style.margin = `calc(0.5vh + 1px)`;
-            });
-
-            // Update servo dial and knob sizes
-            servoDial.style.width = `70px`;
-            servoDial.style.height = `70px`;
-            servoKnob.style.width = `7px`;
-            servoKnob.style.height = `7px`;
-            servoKnob.style.top = `calc(0.5vw + 2px)`;
-
-            // Update labels and values
-            labels.forEach(label => {
-                label.style.fontSize = `10px`;
-            });
-
-            // Update WebSocket input and status
-            websocketInput.style.marginBottom = `calc(0.5vh + 2px)`;
-            websocketInput.style.padding = `calc(0.5vw + 2px)`;
-            websocketInput.style.fontSize = `10px`;
-            connectionStatus.style.marginTop = `calc(0.5vh + 2px)`;
-            connectionStatus.style.fontSize = `8px`;
-
-            // Redraw the servo dial canvas
+            updateJoystickDimensions();
             drawDial(parseInt(dialValueDisplay.textContent, 10) || 0);
-            updateKnob(lastValidAngle); // Update knob position based on last valid angle
+            updateKnob(lastValidAngle);
         });
     </script>
 </body>
