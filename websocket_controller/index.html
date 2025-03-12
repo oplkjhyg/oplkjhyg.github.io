@@ -235,6 +235,11 @@
         .hidden {
             display: none;
         }
+        .prevent-select {
+            -webkit-user-select: none; /* Safari */
+            -ms-user-select: none; /* IE 10 and IE 11 */
+            user-select: none; /* Standard syntax */
+        }
 
         /* Media query for iPhone SE landscape */
         @media (orientation: landscape) and (max-width: 667px) and (max-height: 375px) {
@@ -310,7 +315,7 @@
             <button id="connectButton">Connect</button>
             <div id="connectionStatus" class="connection-status">Not Connected</div>
         </div>
-        <div class="panels">
+        <div class="panels prevent-select">
             <div class="left-panel">
                 <div class="control-group">
                     <span class="label">Speed</span>
