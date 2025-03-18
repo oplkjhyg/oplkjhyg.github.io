@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
+<html lang="en"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Motor Control UI</title>
@@ -127,7 +125,7 @@
             left: 50%;
             transform: translateX(-50%) rotate(0deg);
             z-index: 2;
-            transition: all 0.1s ease;
+            transition: top 0.05s linear, left 0.05s linear; /* Smoother, faster transition */
         }
         .servo-dial-value {
             position: absolute;
@@ -177,6 +175,8 @@
             border-radius: 10px;
             outline: none;
             transition: all 0.3s ease;
+            touch-action: none;
+            -webkit-user-select: none;
         }
         .speed-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
@@ -226,7 +226,7 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            transition: all 0.1s ease;
+            transition: top 0.03s linear, left 0.03s linear; /* Faster, smoother transition */
         }
         .control-mode-toggle {
             margin: calc(0.5vh + 2px) 0;
@@ -236,12 +236,11 @@
             display: none;
         }
         .prevent-select {
-            -webkit-user-select: none; /* Safari */
-            -ms-user-select: none; /* IE 10 and IE 11 */
-            user-select: none; /* Standard syntax */
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
 
-        /* Media query for iPhone SE landscape */
         @media (orientation: landscape) and (max-width: 667px) and (max-height: 375px) {
             .container {
                 width: 95vw;
@@ -396,8 +395,9 @@
         // WebSocket variables
         let ws;
         let commandInterval;
-        let lastValidAngle = 135;
+        let lastValidAngle = 45;
         let activeTouchId = null;
+        let isDraggingSlider = false;
 
         // Servo dial variables
         const canvas = document.querySelector('.servo-dial-canvas');
@@ -405,14 +405,14 @@
         const knob = document.getElementById('knob');
         const dialValueDisplay = document.getElementById('dialValue');
         const servoAngleLabel = document.getElementById('servoAngleLabel');
-        let angle = 135;
         const radius = 31;
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
         let isDragging = false;
-        const START_ANGLE = 135;
-        const END_ANGLE = 45;
-        const ANGLE_RANGE = 270;
+        const START_ANGLE = 45;   // 0 value at 45 degrees (left-bottom)
+        const END_ANGLE = 315;    // 120 value at 315 degrees (right-bottom)
+        const ANGLE_RANGE = 270;  // Total range of motion (45° to 315°)
+        const UI_ROTATION_OFFSET = 90; // Rotate UI clockwise by 90°
 
         // Speed slider variables
         const speedSlider = document.getElementById('speedSlider');
@@ -433,10 +433,10 @@
         const drillStartButton = document.getElementById('drillStart');
         const drillStopButton = document.getElementById('drillStop');
 
-        // Draw the dial background and gradient
+        // Draw the dial background and gradient with UI rotation
         function drawDial(value) {
             const percentage = value / 120;
-            const startRad = (START_ANGLE * Math.PI) / 180;
+            const startRad = ((START_ANGLE + UI_ROTATION_OFFSET) * Math.PI) / 180;
             const sweepAngle = (percentage * ANGLE_RANGE * Math.PI) / 180;
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -455,42 +455,52 @@
             ctx.fill();
         }
 
-        // Update knob position and value
+        // Update knob position and value with UI rotation
         function updateKnob(angleDegrees) {
-            let normalizedAngle = angleDegrees;
-            while (normalizedAngle < START_ANGLE) normalizedAngle += 360;
-            while (normalizedAngle > START_ANGLE + ANGLE_RANGE) normalizedAngle -= 360;
+            let normalizedAngle = angleDegrees % 360;
+            if (normalizedAngle < 0) normalizedAngle += 360;
 
-            if (normalizedAngle < START_ANGLE) normalizedAngle = START_ANGLE;
-            if (normalizedAngle > START_ANGLE + ANGLE_RANGE) normalizedAngle = START_ANGLE + (normalizedAngle - (START_ANGLE + ANGLE_RANGE));
+            // Clamp to the range 45° to 315°
+            if (normalizedAngle > END_ANGLE && normalizedAngle < START_ANGLE) {
+                normalizedAngle = END_ANGLE; // Snap to max (315°)
+            } else if (normalizedAngle < START_ANGLE) {
+                normalizedAngle = START_ANGLE; // Snap to min (45°)
+            }
 
-            const value = Math.round(((normalizedAngle - START_ANGLE) / ANGLE_RANGE) * 120);
-            const rad = (normalizedAngle * Math.PI) / 180;
+            const value = Math.min(120, Math.round(((normalizedAngle - START_ANGLE) / ANGLE_RANGE) * 120));
+            const visualAngle = normalizedAngle + UI_ROTATION_OFFSET; // Rotate UI clockwise
+            const rad = (visualAngle * Math.PI) / 180;
 
             const knobX = centerX + radius * Math.cos(rad);
             const knobY = centerY + radius * Math.sin(rad);
-            
-            knob.style.transform = `translate(-50%, -50%) rotate(${normalizedAngle}deg)`;
-            knob.style.top = `${knobY}px`;
-            knob.style.left = `${knobX}px`;
-            drawDial(value);
-            dialValueDisplay.textContent = value;
-            servoAngleLabel.textContent = `Servo angle: ${value}`;
+
+            requestAnimationFrame(() => {
+                knob.style.top = `${knobY}px`;
+                knob.style.left = `${knobX}px`;
+                drawDial(value);
+                dialValueDisplay.textContent = value;
+                servoAngleLabel.textContent = `Servo angle: ${value}`;
+            });
+
             sendWebSocketMessageImmediately({ command: "servo", value: value });
             lastValidAngle = normalizedAngle;
         }
 
         // Update speed slider value and send via WebSocket
         function updateSpeed(value) {
-            speedValueDisplay.textContent = `${value}%`;
-            sendWebSocketMessageImmediately({ command: "speed", value: parseInt(value, 10) });
+            value = Math.min(Math.max(parseInt(value, 10), 0), 100);
+            requestAnimationFrame(() => {
+                speedValueDisplay.textContent = `${value}%`;
+                speedSlider.value = value;
+            });
+            sendWebSocketMessageImmediately({ command: "speed", value: value });
         }
 
         // Servo Dial Event Listeners
         function setupServoDialListeners() {
-            canvas.addEventListener('touchstart', handleTouchStart);
-            canvas.addEventListener('touchmove', handleTouchMove);
-            canvas.addEventListener('touchend', handleTouchEnd);
+            canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+            canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+            canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
             canvas.addEventListener('mousedown', handleMouseDown);
             document.addEventListener('mousemove', handleMouseMove);
             document.addEventListener('mouseup', handleMouseUp);
@@ -539,8 +549,6 @@
 
         function updateAngle(e) {
             let clientX, clientY;
-            let isValidPosition = true;
-
             if (e.type === 'touch') {
                 clientX = e.clientX - canvas.getBoundingClientRect().left;
                 clientY = e.clientY - canvas.getBoundingClientRect().top;
@@ -549,50 +557,60 @@
                 clientY = e.clientY - canvas.getBoundingClientRect().top;
             }
 
-            const canvasRect = canvas.getBoundingClientRect();
-            if (clientX < 0 || clientX > canvasRect.width || clientY < 0 || clientY > canvasRect.height) {
-                isValidPosition = false;
-            }
-
             const dx = clientX - centerX;
             const dy = clientY - centerY;
+            let angleDegrees = Math.atan2(dy, dx) * 180 / Math.PI;
+            if (angleDegrees < 0) angleDegrees += 360;
 
-            let angleDegrees;
-            if (isValidPosition) {
-                angleDegrees = (Math.atan2(dy, dx) * 180 / Math.PI) + 180;
-                let distance = Math.sqrt(dx * dx + dy * dy);
-                if (distance > radius) {
-                    const angleRad = Math.atan2(dy, dx);
-                    clientX = centerX + radius * Math.cos(angleRad);
-                    clientY = centerY + radius * Math.sin(angleRad);
-                }
+            // Adjust input angle to match the original range (undo UI rotation)
+            angleDegrees = (angleDegrees - UI_ROTATION_OFFSET + 360) % 360;
 
-                const newDx = clientX - centerX;
-                const newDy = clientY - centerY;
-                angleDegrees = (Math.atan2(newDy, newDx) * 180 / Math.PI) + 180;
-                angleDegrees = (angleDegrees + 180) % 360;
-
-                let normalizedAngle = angleDegrees;
-                while (normalizedAngle < START_ANGLE) normalizedAngle += 360;
-                while (normalizedAngle > START_ANGLE + ANGLE_RANGE) normalizedAngle -= 360;
-
-                if (normalizedAngle < START_ANGLE) normalizedAngle = START_ANGLE;
-                if (normalizedAngle > START_ANGLE + ANGLE_RANGE) normalizedAngle = START_ANGLE + (normalizedAngle - (START_ANGLE + ANGLE_RANGE));
-
-                updateKnob(normalizedAngle);
-            } else {
-                updateKnob(lastValidAngle);
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance > radius) {
+                const angleRad = Math.atan2(dy, dx);
+                clientX = centerX + radius * Math.cos(angleRad);
+                clientY = centerY + radius * Math.sin(angleRad);
             }
+
+            updateKnob(angleDegrees);
         }
 
         // Joystick functions
+        function updateJoystickPosition(e) {
+            if (!isJoystickDragging) return;
+
+            const rect = joystick.getBoundingClientRect();
+            let clientX = e.type === 'touch' ? e.clientX - rect.left : e.clientX - rect.left;
+            let clientY = e.type === 'touch' ? e.clientY - rect.top : e.clientY - rect.top;
+
+            let dx = clientX - joystickCenterX;
+            let dy = clientY - joystickCenterY;
+            let distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance > joystickRadius) {
+                const angle = Math.atan2(dy, dx);
+                dx = joystickRadius * Math.cos(angle);
+                dy = joystickRadius * Math.sin(angle);
+            }
+
+            requestAnimationFrame(() => {
+                joystickStick.style.left = `${joystickCenterX + dx}px`;
+                joystickStick.style.top = `${joystickCenterY + dy}px`;
+                joystickStick.style.display = 'block';
+            });
+
+            const xValue = Math.round((dx / joystickRadius) * 100);
+            const yValue = Math.round((dy / joystickRadius) * 100);
+            sendWebSocketMessageImmediately({ command: "joystick", x: xValue, y: yValue });
+        }
+
         function setupJoystickListeners() {
             joystick.addEventListener('mousedown', handleJoystickMouseDown);
             document.addEventListener('mousemove', handleJoystickMouseMove);
             document.addEventListener('mouseup', handleJoystickMouseUp);
-            joystick.addEventListener('touchstart', handleJoystickTouchStart);
-            joystick.addEventListener('touchmove', handleJoystickTouchMove);
-            joystick.addEventListener('touchend', handleJoystickTouchEnd);
+            joystick.addEventListener('touchstart', handleJoystickTouchStart, { passive: false });
+            joystick.addEventListener('touchmove', handleJoystickTouchMove, { passive: false });
+            joystick.addEventListener('touchend', handleJoystickTouchEnd, { passive: false });
 
             updateJoystickDimensions();
         }
@@ -610,14 +628,14 @@
             if (controlModeSelect.value !== 'joystick' || e.touches.length === 0) return;
             activeTouchId = e.touches[0].identifier;
             isJoystickDragging = true;
-            updateJoystickPosition(e.touches[0]);
+            updateJoystickPosition({ type: 'touch', clientX: e.touches[0].clientX, clientY: e.touches[0].clientY });
         }
 
         function handleJoystickTouchMove(e) {
             e.preventDefault();
             if (!isJoystickDragging || controlModeSelect.value !== 'joystick') return;
             let touch = Array.from(e.touches).find(t => t.identifier === activeTouchId) || e.touches[0];
-            updateJoystickPosition(touch);
+            updateJoystickPosition({ type: 'touch', clientX: touch.clientX, clientY: touch.clientY });
         }
 
         function handleJoystickTouchEnd(e) {
@@ -641,43 +659,18 @@
             updateJoystickPosition(e);
         }
 
-        function handleJoystickMouseUp(e) {
-            e.preventDefault();
+        function handleJoystickMouseUp() {
             if (!isJoystickDragging || controlModeSelect.value !== 'joystick') return;
             isJoystickDragging = false;
             resetJoystick();
         }
 
-        function updateJoystickPosition(e) {
-            if (!isJoystickDragging) return;
-
-            const rect = joystick.getBoundingClientRect();
-            let clientX = e.type === 'touch' ? e.clientX - rect.left : e.clientX - rect.left;
-            let clientY = e.type === 'touch' ? e.clientY - rect.top : e.clientY - rect.top;
-
-            let dx = clientX - joystickCenterX;
-            let dy = clientY - joystickCenterY;
-            let distance = Math.sqrt(dx * dx + dy * dy);
-
-            if (distance > joystickRadius) {
-                const angle = Math.atan2(dy, dx);
-                dx = joystickRadius * Math.cos(angle);
-                dy = joystickRadius * Math.sin(angle);
-            }
-
-            joystickStick.style.left = `${joystickCenterX + dx}px`;
-            joystickStick.style.top = `${joystickCenterY + dy}px`;
-            joystickStick.style.display = 'block';
-
-            const xValue = Math.round((dx / joystickRadius) * 100);
-            const yValue = Math.round((dy / joystickRadius) * 100);
-            sendWebSocketMessageImmediately({ command: "joystick", x: xValue, y: yValue });
-        }
-
         function resetJoystick() {
-            joystickStick.style.left = `${joystickCenterX}px`;
-            joystickStick.style.top = `${joystickCenterY}px`;
-            joystickStick.style.display = 'block';
+            requestAnimationFrame(() => {
+                joystickStick.style.left = `${joystickCenterX}px`;
+                joystickStick.style.top = `${joystickCenterY}px`;
+                joystickStick.style.display = 'block';
+            });
             if (controlModeSelect.value === 'joystick') {
                 sendWebSocketMessageImmediately({ command: "joystick", x: 0, y: 0 });
             }
@@ -689,8 +682,8 @@
             buttons.forEach(button => {
                 button.addEventListener('mousedown', handleButtonPress);
                 button.addEventListener('mouseup', handleButtonRelease);
-                button.addEventListener('touchstart', handleButtonPress);
-                button.addEventListener('touchend', handleButtonRelease);
+                button.addEventListener('touchstart', handleButtonPress, { passive: false });
+                button.addEventListener('touchend', handleButtonRelease, { passive: false });
             });
         }
 
@@ -699,13 +692,13 @@
             const button = e.target;
             if (button.id === 'drillStart') {
                 button.classList.add('selected');
-                button.disabled = true; // Disable start button
+                button.disabled = true;
                 sendWebSocketMessageImmediately({ command: button.id });
             } else if (controlModeSelect.value === 'arrows' && ['up', 'down', 'left', 'right'].includes(button.id)) {
                 button.classList.add('selected');
                 sendWebSocketMessageImmediately({ command: button.id });
             } else if (controlModeSelect.value === 'joystick' && ['up', 'down', 'left', 'right'].includes(button.id)) {
-                return; // Ignore directional buttons in joystick mode
+                return;
             } else {
                 button.classList.add('selected');
                 sendWebSocketMessageImmediately({ command: button.id });
@@ -717,29 +710,82 @@
             const button = e.target;
             if (button.id === 'drillStop') {
                 button.classList.remove('selected');
-                drillStartButton.disabled = false; // Re-enable start button
+                drillStartButton.disabled = false;
                 drillStartButton.classList.remove('selected');
                 sendWebSocketMessageImmediately({ command: 'drillStop' });
             } else if (button.id === 'drillStart') {
-                // No action on release for drillStart, as it's a toggle
+                // No action on release
             } else if (controlModeSelect.value === 'arrows' && ['up', 'down', 'left', 'right'].includes(button.id)) {
                 button.classList.remove('selected');
-                sendWebSocketMessageImmediately({ command: `${button.id}:off` }); // Use :off for arrows
+                sendWebSocketMessageImmediately({ command: `${button.id}:off` });
             } else if (controlModeSelect.value === 'joystick' && ['up', 'down', 'left', 'right'].includes(button.id)) {
-                return; // Ignore directional buttons in joystick mode
+                return;
             } else {
                 button.classList.remove('selected');
-                sendWebSocketMessageImmediately({ command: `${button.id}:stop` }); // Use :stop for others
+                sendWebSocketMessageImmediately({ command: `${button.id}:stop` });
             }
         }
 
         // Speed Slider Event Listeners
         function setupSpeedSliderListeners() {
-            speedSlider.addEventListener('input', () => updateSpeed(speedSlider.value));
+            speedSlider.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                isDraggingSlider = true;
+                updateSliderPosition(e);
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (isDraggingSlider) {
+                    e.preventDefault();
+                    updateSliderPosition(e);
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                isDraggingSlider = false;
+            });
+
+            speedSlider.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (e.touches.length > 0) {
+                    activeTouchId = e.touches[0].identifier;
+                    isDraggingSlider = true;
+                    updateSliderPosition(e.touches[0]);
+                }
+            }, { passive: false });
+
             speedSlider.addEventListener('touchmove', (e) => {
                 e.preventDefault();
-                updateSpeed(speedSlider.value);
-            });
+                if (isDraggingSlider && e.touches.length > 0) {
+                    let touch = Array.from(e.touches).find(t => t.identifier === activeTouchId) || e.touches[0];
+                    updateSliderPosition(touch);
+                }
+            }, { passive: false });
+
+            speedSlider.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                if (isDraggingSlider) {
+                    const touch = Array.from(e.changedTouches).find(t => t.identifier === activeTouchId);
+                    if (touch) {
+                        updateSliderPosition(touch);
+                    }
+                    isDraggingSlider = false;
+                    activeTouchId = null;
+                }
+            }, { passive: false });
+        }
+
+        function updateSliderPosition(e) {
+            const rect = speedSlider.getBoundingClientRect();
+            const clientX = e.type === 'touch' ? e.clientX : e.clientX;
+            const newValue = Math.min(
+                Math.max(
+                    Math.round(((clientX - rect.left) / rect.width) * 100),
+                    0
+                ),
+                100
+            );
+            updateSpeed(newValue);
         }
 
         // WebSocket Event Listeners
@@ -837,6 +883,7 @@
         function init() {
             drawDial(0);
             updateKnob(START_ANGLE);
+            updateSpeed(0);
             const buttons = document.querySelectorAll('.button');
             buttons.forEach(button => button.classList.remove('selected'));
             setupServoDialListeners();
@@ -847,7 +894,7 @@
             setupControlModeToggle();
             arrowControls.classList.remove('hidden');
             joystickControls.classList.add('hidden');
-            drillStartButton.disabled = false; // Ensure start button is enabled initially
+            drillStartButton.disabled = false;
         }
 
         document.addEventListener('DOMContentLoaded', init);
@@ -859,5 +906,4 @@
             updateKnob(lastValidAngle);
         });
     </script>
-</body>
-</html>
+</body></html>
